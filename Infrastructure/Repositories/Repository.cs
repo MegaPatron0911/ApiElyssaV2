@@ -16,38 +16,41 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         _dbSet = context.Set<T>();
     }
 
-    public async Task<T?> GetByIdAsync(Guid id)
+    public async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.FindAsync(id);
+        return await _dbSet.FindAsync(new object[] { id }, cancellationToken);
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync()
+    public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbSet.ToListAsync();
+        return await _dbSet.ToListAsync(cancellationToken);
     }
 
-    public async Task<T> AddAsync(T entity)
+    public async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
     {
         entity.CreatedAt = DateTime.UtcNow;
-        await _dbSet.AddAsync(entity);
-        await _context.SaveChangesAsync();
+        await _dbSet.AddAsync(entity, cancellationToken);
         return entity;
     }
 
-    public async Task UpdateAsync(T entity)
+    public Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
     {
         entity.UpdatedAt = DateTime.UtcNow;
         _dbSet.Update(entity);
-        await _context.SaveChangesAsync();
+        return Task.CompletedTask;
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var entity = await GetByIdAsync(id);
+        var entity = await GetByIdAsync(id, cancellationToken);
         if (entity != null)
         {
             _dbSet.Remove(entity);
-            await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet.AnyAsync(e => e.Id == id, cancellationToken);
     }
 }

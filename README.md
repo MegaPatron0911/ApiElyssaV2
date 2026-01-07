@@ -1,31 +1,35 @@
-# ApiElyssaV2 - Arquitectura en Capas
+# ApiElyssaV2 - Arquitectura en Capas con Clean Architecture
 
 ## Estructura del Proyecto
 
-Este proyecto sigue una arquitectura en capas limpia (Clean Architecture) con las siguientes bibliotecas de clases:
+Este proyecto sigue una arquitectura en capas limpia (Clean Architecture) con principios SOLID y patrones de diseño modernos.
 
 ### ?? Elyssa.PublicApi
 **Capa de Presentación** - API Web que expone los endpoints HTTP
 
 ```
 Elyssa.PublicApi/
-??? Controllers/          # Controladores API REST
+??? Controllers/          # Thin Controllers (solo orquestación)
+?   ??? BaseController.cs
+?   ??? CompaniesController.cs
 ?   ??? WeatherForecastController.cs
+??? Middleware/          # Cross-cutting concerns
+?   ??? ExceptionHandlingMiddleware.cs
+?   ??? CompanyContextMiddleware.cs
+??? Extensions/          # Extensiones HTTP
+?   ??? ErrorExtensions.cs
 ??? Shared/              # Utilidades compartidas
-?   ??? Constants/       # Constantes de la aplicación
-?   ?   ??? AppConstants.cs
-?   ??? Extensions/      # Métodos de extensión
-?   ?   ??? DateTimeExtensions.cs
-?   ??? Helpers/         # Clases auxiliares
-?       ??? StringHelper.cs
-??? Program.cs           # Punto de entrada de la aplicación
+?   ??? Constants/
+?   ??? Extensions/
+?   ??? Helpers/
+??? Program.cs           # Configuración y DI
 ```
 
 **Responsabilidades:**
 - Manejar requests y responses HTTP
-- Validación de entrada
-- Configuración de middleware
-- Swagger/OpenAPI documentation
+- Validación de entrada (DataAnnotations)
+- Orquestación de servicios
+- Conversión de Result a IActionResult
 
 ---
 
@@ -40,20 +44,26 @@ Core/
 ?   ?   ??? Company.cs
 ?   ??? ValueObjects/    # Objetos de valor inmutables
 ?       ??? Address.cs
-??? Services/            # Servicios de aplicación
+??? Services/            # Servicios de aplicación (Lógica de Negocio)
 ?   ??? CompanyService.cs
 ??? Interfaces/          # Contratos (abstracciones)
 ?   ??? IRepository.cs
 ?   ??? ICompanyService.cs
+?   ??? IUnitOfWork.cs
 ??? DTOs/                # Data Transfer Objects
-    ??? CompanyDto.cs
+?   ??? CompanyDto.cs
+??? Common/              # Result Pattern y Errores
+    ??? Result.cs
+    ??? Error.cs
+    ??? CompanyErrors.cs
 ```
 
 **Responsabilidades:**
 - Definir entidades del dominio
-- Lógica de negocio
+- Lógica de negocio y validaciones
 - Interfaces para inversión de dependencias
 - DTOs para transferencia de datos
+- Result Pattern para manejo de errores
 
 ---
 
@@ -65,8 +75,9 @@ Infrastructure/
 ??? Data/                # Contexto de Entity Framework Core
 ?   ??? ApplicationDbContext.cs
 ??? Repositories/        # Implementaciones de repositorios
-?   ??? Repository.cs
+?   ??? Repository.cs (genérico)
 ?   ??? CompanyRepository.cs
+?   ??? UnitOfWork.cs
 ??? External/            # Servicios externos de terceros
 ?   ??? ExternalApiClient.cs
 ??? Security/            # Autenticación y autorización
@@ -75,7 +86,7 @@ Infrastructure/
 
 **Responsabilidades:**
 - Acceso a datos (Entity Framework Core)
-- Implementación de repositorios
+- Implementación de repositorios y Unit of Work
 - Integración con APIs externas
 - Seguridad y criptografía
 
@@ -86,16 +97,55 @@ Infrastructure/
 ```
 Elyssa.PublicApi
     ?
-    ??? Elyssa.Core
-    ??? Elyssa.Infrastructure
+    ??? Elyssa.Core (Interfaces y DTOs)
+    ??? Elyssa.Infrastructure (Implementaciones)
             ?
-        Elyssa.Core
+        Elyssa.Core (Interfaces)
 ```
 
 **Principios:**
 - ? PublicApi depende de Core e Infrastructure
-- ? Infrastructure depende de Core
+- ? Infrastructure depende de Core (solo interfaces)
 - ? Core no depende de nadie (capa independiente)
+- ? Dependency Inversion Principle aplicado
+
+---
+
+## ?? Patrones de Diseño Implementados
+
+### 1. **Result Pattern**
+Manejo explícito de errores sin excepciones:
+```csharp
+var result = await _companyService.GetByIdAsync(id, cancellationToken);
+return result.Match(
+    success => Ok(success),
+    error => error.ToHttpResponse()
+);
+```
+
+### 2. **Unit of Work Pattern**
+Transacciones consistentes y coordinación de repositorios:
+```csharp
+await _unitOfWork.BeginTransactionAsync();
+await _unitOfWork.Companies.AddAsync(company);
+await _unitOfWork.CommitTransactionAsync();
+```
+
+### 3. **Repository Pattern**
+Abstracción del acceso a datos:
+```csharp
+public interface IRepository<T> where T : BaseEntity { }
+```
+
+### 4. **Middleware Pattern**
+Cross-cutting concerns (logging, error handling):
+```csharp
+app.UseExceptionHandlingMiddleware();
+app.UseCompanyContext();
+```
+
+### 5. **Thin Controllers**
+Controllers solo para orquestación, sin lógica de negocio.
 
 ---
 
@@ -105,7 +155,7 @@ Elyssa.PublicApi
 - **ASP.NET Core Web API**
 - **Entity Framework Core 8.0**
 - **Swagger/OpenAPI**
-- **SQL Server** (como proveedor de base de datos)
+- **SQL Server**
 
 ---
 
@@ -138,21 +188,69 @@ dotnet ef database update --project Infrastructure --startup-project ApiElyssaV2
 
 ---
 
-## ?? Próximos Pasos
+## ?? Características Implementadas
 
-1. Configurar la cadena de conexión en `appsettings.json`
-2. Implementar la lógica en `CompanyService`
-3. Crear controladores para las entidades del dominio
-4. Agregar autenticación JWT
-5. Implementar middleware de manejo de errores
-6. Agregar logging
-7. Configurar CORS
+- ? **Result Pattern** para manejo de errores
+- ? **Unit of Work** para transacciones
+- ? **Repository Pattern** genérico
+- ? **Thin Controllers** (sin lógica de negocio)
+- ? **Middleware** para exception handling
+- ? **CancellationToken** en toda la pila
+- ? **BaseController** con contexto compartido
+- ? **Error Extensions** para conversión HTTP
+- ? **Principios SOLID** aplicados
 
 ---
 
-## ??? Patrones Implementados
+## ?? Documentación Adicional
 
-- **Repository Pattern**: Abstracción del acceso a datos
-- **Dependency Injection**: Inversión de control
-- **DTO Pattern**: Separación entre entidades y modelos de API
-- **Clean Architecture**: Separación de responsabilidades por capas
+- [PRINCIPIOS_DISEÑO.md](PRINCIPIOS_DISEÑO.md) - Patrones y principios implementados
+- [SETUP.md](SETUP.md) - Guía de configuración paso a paso
+- [ARQUITECTURA.md](ARQUITECTURA.md) - Diagramas y estructura detallada
+
+---
+
+## ??? Principios SOLID Aplicados
+
+### Single Responsibility Principle (SRP) ?
+- Cada capa tiene una responsabilidad específica
+- Controllers: Solo orquestación
+- Services: Solo lógica de negocio
+- Repositories: Solo acceso a datos
+
+### Open/Closed Principle (OCP) ?
+- Uso de interfaces para extensibilidad
+- Result Pattern extensible con nuevos tipos de error
+
+### Liskov Substitution Principle (LSP) ?
+- Repository genérico con BaseEntity
+- Cualquier implementación de IRepository es intercambiable
+
+### Interface Segregation Principle (ISP) ?
+- Interfaces específicas y cohesivas
+- ICompanyService, IRepository, IUnitOfWork
+
+### Dependency Inversion Principle (DIP) ?
+- Las capas superiores dependen de abstracciones
+- Inyección de dependencias en toda la aplicación
+
+---
+
+## ?? Flujo de una Request
+
+```
+HTTP Request
+    ?
+CompanyContextMiddleware (extrae headers)
+    ?
+ExceptionHandlingMiddleware (try-catch global)
+    ?
+Controller (orquestación)
+    ?
+Service (lógica de negocio)
+    ?
+Unit of Work (coordinación)
+    ?
+Repository (acceso a datos)
+    ?
+DbContext ? Database

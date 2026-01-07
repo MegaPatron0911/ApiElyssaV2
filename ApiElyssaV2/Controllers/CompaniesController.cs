@@ -1,136 +1,104 @@
 using Elyssa.Core.DTOs;
 using Elyssa.Core.Interfaces;
+using Elyssa.PublicApi.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elyssa.PublicApi.Controllers;
 
-[ApiController]
 [Route("api/[controller]")]
-public class CompaniesController : ControllerBase
+public class CompaniesController : BaseController
 {
     private readonly ICompanyService _companyService;
-    private readonly ILogger<CompaniesController> _logger;
 
-    public CompaniesController(ICompanyService companyService, ILogger<CompaniesController> logger)
+    public CompaniesController(ICompanyService companyService)
     {
         _companyService = companyService;
-        _logger = logger;
     }
 
     /// <summary>
     /// Obtiene todas las compañías
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<CompanyDto>>> GetAll()
+    [ProducesResponseType(typeof(IEnumerable<CompanyDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        try
-        {
-            var companies = await _companyService.GetAllAsync();
-            return Ok(companies);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al obtener las compañías");
-            return StatusCode(500, "Error interno del servidor");
-        }
+        var result = await _companyService.GetAllAsync(cancellationToken);
+
+        return result.Match(
+            success => Ok(success),
+            error => error.ToHttpResponse()
+        );
     }
 
     /// <summary>
     /// Obtiene una compañía por ID
     /// </summary>
-    [HttpGet("{id}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(CompanyDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<CompanyDto>> GetById(Guid id)
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
-        try
-        {
-            var company = await _companyService.GetByIdAsync(id);
-            if (company == null)
-                return NotFound($"Compañía con ID {id} no encontrada");
+        var result = await _companyService.GetByIdAsync(id, cancellationToken);
 
-            return Ok(company);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al obtener la compañía con ID {Id}", id);
-            return StatusCode(500, "Error interno del servidor");
-        }
+        return result.Match(
+            success => Ok(success),
+            error => error.ToHttpResponse()
+        );
     }
 
     /// <summary>
     /// Crea una nueva compañía
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(CompanyDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<CompanyDto>> Create([FromBody] CompanyDto companyDto)
+    public async Task<IActionResult> Create([FromBody] CompanyDto companyDto, CancellationToken cancellationToken)
     {
-        try
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
 
-            var createdCompany = await _companyService.CreateAsync(companyDto);
-            return CreatedAtAction(nameof(GetById), new { id = createdCompany.Id }, createdCompany);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al crear la compañía");
-            return StatusCode(500, "Error interno del servidor");
-        }
+        var result = await _companyService.CreateAsync(companyDto, cancellationToken);
+
+        return result.Match(
+            success => CreatedAtAction(nameof(GetById), new { id = success.Id }, success),
+            error => error.ToHttpResponse()
+        );
     }
 
     /// <summary>
     /// Actualiza una compañía existente
     /// </summary>
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(Guid id, [FromBody] CompanyDto companyDto)
+    public async Task<IActionResult> Update(Guid id, [FromBody] CompanyDto companyDto, CancellationToken cancellationToken)
     {
-        try
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
 
-            await _companyService.UpdateAsync(id, companyDto);
-            return NoContent();
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound($"Compañía con ID {id} no encontrada");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al actualizar la compañía con ID {Id}", id);
-            return StatusCode(500, "Error interno del servidor");
-        }
+        var result = await _companyService.UpdateAsync(id, companyDto, cancellationToken);
+
+        return result.Match(
+            () => NoContent(),
+            error => error.ToHttpResponse()
+        );
     }
 
     /// <summary>
     /// Elimina una compañía
     /// </summary>
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        try
-        {
-            await _companyService.DeleteAsync(id);
-            return NoContent();
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound($"Compañía con ID {id} no encontrada");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al eliminar la compañía con ID {Id}", id);
-            return StatusCode(500, "Error interno del servidor");
-        }
+        var result = await _companyService.DeleteAsync(id, cancellationToken);
+
+        return result.Match(
+            () => NoContent(),
+            error => error.ToHttpResponse()
+        );
     }
 }

@@ -1,3 +1,4 @@
+using Elyssa.Core.Common;
 using Elyssa.Core.Domain.Entities;
 using Elyssa.Core.DTOs;
 using Elyssa.Core.Interfaces;
@@ -6,27 +7,37 @@ namespace Elyssa.Core.Services;
 
 public class CompanyService : ICompanyService
 {
-    private readonly IRepository<Company> _companyRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CompanyService(IRepository<Company> companyRepository)
+    public CompanyService(IUnitOfWork unitOfWork)
     {
-        _companyRepository = companyRepository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async Task<CompanyDto?> GetByIdAsync(Guid id)
+    public async Task<Result<CompanyDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var company = await _companyRepository.GetByIdAsync(id);
-        return company != null ? MapToDto(company) : null;
+        var company = await _unitOfWork.Companies.GetByIdAsync(id, cancellationToken);
+        
+        if (company == null)
+            return Result<CompanyDto>.Failure(CompanyErrors.NotFound(id));
+
+        return Result<CompanyDto>.Success(MapToDto(company));
     }
 
-    public async Task<IEnumerable<CompanyDto>> GetAllAsync()
+    public async Task<Result<IEnumerable<CompanyDto>>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var companies = await _companyRepository.GetAllAsync();
-        return companies.Select(MapToDto);
+        var companies = await _unitOfWork.Companies.GetAllAsync(cancellationToken);
+        var companiesDto = companies.Select(MapToDto);
+        
+        return Result<IEnumerable<CompanyDto>>.Success(companiesDto);
     }
 
-    public async Task<CompanyDto> CreateAsync(CompanyDto companyDto)
+    public async Task<Result<CompanyDto>> CreateAsync(CompanyDto companyDto, CancellationToken cancellationToken = default)
     {
+        // Validación de negocio
+        if (string.IsNullOrWhiteSpace(companyDto.Name) || companyDto.Name.Length < 3)
+            return Result<CompanyDto>.Failure(CompanyErrors.NameTooShort);
+
         var company = new Company
         {
             Id = Guid.NewGuid(),
@@ -37,15 +48,22 @@ public class CompanyService : ICompanyService
             IsActive = companyDto.IsActive
         };
 
-        var createdCompany = await _companyRepository.AddAsync(company);
-        return MapToDto(createdCompany);
+        var createdCompany = await _unitOfWork.Companies.AddAsync(company, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result<CompanyDto>.Success(MapToDto(createdCompany));
     }
 
-    public async Task UpdateAsync(Guid id, CompanyDto companyDto)
+    public async Task<Result> UpdateAsync(Guid id, CompanyDto companyDto, CancellationToken cancellationToken = default)
     {
-        var company = await _companyRepository.GetByIdAsync(id);
+        var company = await _unitOfWork.Companies.GetByIdAsync(id, cancellationToken);
+        
         if (company == null)
-            throw new KeyNotFoundException($"Company with ID {id} not found");
+            return Result.Failure(CompanyErrors.NotFound(id));
+
+        // Validación de negocio
+        if (string.IsNullOrWhiteSpace(companyDto.Name) || companyDto.Name.Length < 3)
+            return Result.Failure(CompanyErrors.NameTooShort);
 
         company.Name = companyDto.Name;
         company.Description = companyDto.Description;
@@ -53,16 +71,23 @@ public class CompanyService : ICompanyService
         company.Phone = companyDto.Phone;
         company.IsActive = companyDto.IsActive;
 
-        await _companyRepository.UpdateAsync(company);
+        await _unitOfWork.Companies.UpdateAsync(company, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var company = await _companyRepository.GetByIdAsync(id);
-        if (company == null)
-            throw new KeyNotFoundException($"Company with ID {id} not found");
+        var exists = await _unitOfWork.Companies.ExistsAsync(id, cancellationToken);
+        
+        if (!exists)
+            return Result.Failure(CompanyErrors.NotFound(id));
 
-        await _companyRepository.DeleteAsync(id);
+        await _unitOfWork.Companies.DeleteAsync(id, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
     }
 
     private static CompanyDto MapToDto(Company company)

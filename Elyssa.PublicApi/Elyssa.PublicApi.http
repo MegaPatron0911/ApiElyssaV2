@@ -1,0 +1,6 @@
+@Elyssa.PublicApi_HostAddress = http://localhost:5174
+
+GET {{Elyssa.PublicApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

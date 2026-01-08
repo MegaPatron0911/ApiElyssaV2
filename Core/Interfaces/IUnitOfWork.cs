@@ -1,4 +1,5 @@
 using Elyssa.Core.Domain.Entities;
+using Elyssa.Core.Interfaces;
 
 namespace Elyssa.Core.Interfaces;
 
@@ -7,7 +8,7 @@ namespace Elyssa.Core.Interfaces;
 /// </summary>
 public interface IUnitOfWork : IDisposable
 {
-    IRepository<Company> Companies { get; }
+    ICompanyRepository Companies { get; }
     
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);

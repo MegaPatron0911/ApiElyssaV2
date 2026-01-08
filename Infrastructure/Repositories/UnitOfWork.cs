@@ -9,14 +9,14 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly ApplicationDbContext _context;
     private IDbContextTransaction? _transaction;
-    private IRepository<Company>? _companies;
+    private ICompanyRepository? _companies;
 
     public UnitOfWork(ApplicationDbContext context)
     {
         _context = context;
     }
 
-    public IRepository<Company> Companies =>
+    public ICompanyRepository Companies =>
         _companies ??= new CompanyRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

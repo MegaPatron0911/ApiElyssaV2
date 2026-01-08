@@ -5,8 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Elyssa.PublicApi.Controllers;
 
-[Route("api/[controller]")]
-public class CompaniesController : BaseController
+[Route("api/v1/[controller]")]
+[Produces("application/json")]
+[ApiController]
+public class CompaniesController : ControllerBase
 {
     private readonly ICompanyService _companyService;
 
@@ -16,89 +18,62 @@ public class CompaniesController : BaseController
     }
 
     /// <summary>
-    /// Obtiene todas las compañías
+    /// Obtiene información básica de la empresa autenticada
     /// </summary>
-    [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<CompanyDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    [HttpGet("info")]
+    [ProducesResponseType(typeof(ApiResponse<CompanyBasicInfoDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetCompanyBasicInfo(
+        [FromHeader(Name = "x-company-id")] Guid companyId,
+        CancellationToken cancellationToken)
     {
-        var result = await _companyService.GetAllAsync(cancellationToken);
+        var timestamp = DateTime.UtcNow;
+        var result = await _companyService.GetBasicInfoAsync(companyId, cancellationToken);
 
         return result.Match(
-            success => Ok(success),
-            error => error.ToHttpResponse()
-        );
-    }
-
-    /// <summary>
-    /// Obtiene una compañía por ID
-    /// </summary>
-    [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(CompanyDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
-    {
-        var result = await _companyService.GetByIdAsync(id, cancellationToken);
-
-        return result.Match(
-            success => Ok(success),
-            error => error.ToHttpResponse()
-        );
-    }
-
-    /// <summary>
-    /// Crea una nueva compañía
-    /// </summary>
-    [HttpPost]
-    [ProducesResponseType(typeof(CompanyDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Create([FromBody] CompanyDto companyDto, CancellationToken cancellationToken)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        var result = await _companyService.CreateAsync(companyDto, cancellationToken);
-
-        return result.Match(
-            success => CreatedAtAction(nameof(GetById), new { id = success.Id }, success),
-            error => error.ToHttpResponse()
-        );
-    }
-
-    /// <summary>
-    /// Actualiza una compañía existente
-    /// </summary>
-    [HttpPut("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(Guid id, [FromBody] CompanyDto companyDto, CancellationToken cancellationToken)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        var result = await _companyService.UpdateAsync(id, companyDto, cancellationToken);
-
-        return result.Match(
-            () => NoContent(),
-            error => error.ToHttpResponse()
-        );
-    }
-
-    /// <summary>
-    /// Elimina una compañía
-    /// </summary>
-    [HttpDelete("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
-    {
-        var result = await _companyService.DeleteAsync(id, cancellationToken);
-
-        return result.Match(
-            () => NoContent(),
-            error => error.ToHttpResponse()
+            success => Ok(new ApiResponse<CompanyBasicInfoDto>
+            {
+                Success = true,
+                Data = success,
+                Timestamp = timestamp
+            }),
+            error => error.Type switch
+            {
+                Core.Common.ErrorType.NotFound => NotFound(new ApiErrorResponse
+                {
+                    Success = false,
+                    Error = new ErrorDetail
+                    {
+                        Code = "COMPANY_NOT_FOUND",
+                        Message = "La empresa especificada no existe",
+                        Details = "No se encontró ninguna empresa con el ID proporcionado en el header x-company-id"
+                    },
+                    Timestamp = timestamp
+                }),
+                Core.Common.ErrorType.Validation => BadRequest(new ApiErrorResponse
+                {
+                    Success = false,
+                    Error = new ErrorDetail
+                    {
+                        Code = "COMPANY_INACTIVE",
+                        Message = error.Message,
+                        Details = "La empresa no está activa para consultar su información"
+                    },
+                    Timestamp = timestamp
+                }),
+                _ => StatusCode(500, new ApiErrorResponse
+                {
+                    Success = false,
+                    Error = new ErrorDetail
+                    {
+                        Code = "INTERNAL_ERROR",
+                        Message = "Error interno del servidor",
+                        Details = error.Message
+                    },
+                    Timestamp = timestamp
+                })
+            }
         );
     }
 }

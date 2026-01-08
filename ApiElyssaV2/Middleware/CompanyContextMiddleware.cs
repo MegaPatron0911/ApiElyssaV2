@@ -1,8 +1,5 @@
 namespace Elyssa.PublicApi.Middleware;
 
-/// <summary>
-/// Middleware para extraer el Company ID del header y agregarlo al contexto
-/// </summary>
 public class CompanyContextMiddleware
 {
     private readonly RequestDelegate _next;
@@ -19,7 +16,6 @@ public class CompanyContextMiddleware
         {
             if (Guid.TryParse(companyIdValue, out var companyId))
             {
-                // Almacenar en HttpContext.Items para uso en toda la petición
                 context.Items["CompanyId"] = companyId;
             }
         }
@@ -28,9 +24,6 @@ public class CompanyContextMiddleware
     }
 }
 
-/// <summary>
-/// Extensión para registrar el middleware
-/// </summary>
 public static class CompanyContextMiddlewareExtensions
 {
     public static IApplicationBuilder UseCompanyContext(this IApplicationBuilder builder)

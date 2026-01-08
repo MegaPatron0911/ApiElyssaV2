@@ -12,3 +12,10 @@ public interface IRepository<T> where T : BaseEntity
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
 }
+
+public interface ICompanyRepository : IRepository<Company>
+{
+    Task<Company?> GetByIdWithPlanAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<int> CountActiveUsersByCompanyAsync(Guid companyId, CancellationToken cancellationToken = default);
+    Task<int> CountActivePropertiesByCompanyAsync(Guid companyId, CancellationToken cancellationToken = default);
+}

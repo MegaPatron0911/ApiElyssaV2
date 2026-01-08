@@ -2,57 +2,110 @@
 using Elyssa.Core.Services;
 using Elyssa.Infrastructure.Data;
 using Elyssa.Infrastructure.Repositories;
-using Elyssa.PublicApi.Middleware;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using System.Reflection;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File(
+        path: "logs/elyssa-.txt",
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .Enrich.FromLogContext()
+    .CreateLogger();
 
-// Add services to the container.
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+try
 {
-    c.SwaggerDoc("v1", new() { Title = "Elyssa API", Version = "v1" });
-});
+    Log.Information("Iniciando Elyssa API...");
 
-// Database Configuration
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    var builder = WebApplication.CreateBuilder(args);
 
-// Dependency Injection - Unit of Work
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+    builder.Host.UseSerilog();
 
-// Dependency Injection - Services
-builder.Services.AddScoped<ICompanyService, CompanyService>();
-
-// CORS Configuration
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        c.SwaggerDoc("v1", new()
+        {
+            Title = "Elyssa API",
+            Version = "v1",
+            Description = "API BackOffice Elyssa - Clean Architecture con Result Pattern",
+            Contact = new()
+            {
+                Name = "Equipo Elyssa",
+                Email = "soporte@elyssa.com"
+            }
+        });
+
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        if (File.Exists(xmlPath))
+        {
+            c.IncludeXmlComments(xmlPath);
+        }
     });
-});
 
-var app = builder.Build();
+    builder.Services.AddProblemDetails();
+    builder.Services.AddMemoryCache();
+    builder.Services.AddAutoMapper(typeof(Elyssa.Core.Mappings.CompanyMappingProfile));
 
-// Configure the HTTP request pipeline.
-app.UseExceptionHandlingMiddleware();
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(
+            builder.Configuration.GetConnectionString("deployDatabase"),
+            npgsqlOptions => npgsqlOptions.EnableRetryOnFailure()));
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+    builder.Services.AddScoped<ICompanyService, CompanyService>();
+
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowAll", policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
+    });
+
+    var app = builder.Build();
+
+    app.UseSerilogRequestLogging();
+
+    app.UseExceptionHandler();
+    app.UseStatusCodePages();
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Elyssa API v1");
+            c.RoutePrefix = "swagger";
+            c.DocumentTitle = "Elyssa API - Documentación";
+        });
+    }
+
+    app.UseHttpsRedirection();
+
+    app.UseCors("AllowAll");
+
+    app.UseAuthorization();
+
+    app.MapControllers();
+
+    Log.Information("Elyssa API iniciada exitosamente");
+
+    app.Run();
 }
-
-app.UseHttpsRedirection();
-
-app.UseCors("AllowAll");
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+catch (Exception ex)
+{
+    Log.Fatal(ex, "La aplicación falló al iniciar");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
+}

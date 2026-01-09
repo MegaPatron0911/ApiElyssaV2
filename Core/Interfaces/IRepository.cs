@@ -19,3 +19,21 @@ public interface ICompanyRepository : IRepository<Company>
     Task<int> CountActiveUsersByCompanyAsync(Guid companyId, CancellationToken cancellationToken = default);
     Task<int> CountActivePropertiesByCompanyAsync(Guid companyId, CancellationToken cancellationToken = default);
 }
+
+public interface IPropertyRepository : IRepository<Property>
+{
+    Task<(IEnumerable<Property> Properties, int TotalCount)> GetPagedAsync(
+        Guid companyId,
+        int page,
+        int pageSize,
+        string? code,
+        string? address,
+        string? city,
+        string sortBy,
+        string sortOrder,
+        CancellationToken cancellationToken = default);
+    
+    Task<bool> HasInventoriesAsync(Guid propertyId, CancellationToken cancellationToken = default);
+    
+    Task<Dictionary<Guid, bool>> GetInventoriesExistenceAsync(IEnumerable<Guid> propertyIds, CancellationToken cancellationToken = default);
+}

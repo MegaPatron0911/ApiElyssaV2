@@ -10,6 +10,7 @@ public class UnitOfWork : IUnitOfWork
     private readonly ApplicationDbContext _context;
     private IDbContextTransaction? _transaction;
     private ICompanyRepository? _companies;
+    private IPropertyRepository? _properties;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -18,6 +19,9 @@ public class UnitOfWork : IUnitOfWork
 
     public ICompanyRepository Companies =>
         _companies ??= new CompanyRepository(_context);
+
+    public IPropertyRepository Properties =>
+        _properties ??= new PropertyRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

@@ -1,8 +1,4 @@
 namespace Elyssa.Core.Common;
-
-/// <summary>
-/// Representa un error en la aplicación
-/// </summary>
 public sealed record Error
 {
     public string Code { get; }

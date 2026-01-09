@@ -1,7 +1,6 @@
 # ApiElyssaV2 - Arquitectura en Capas con Clean Architecture
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![Tests](https://img.shields.io/badge/tests-19%2F19%20passing-brightgreen)]()
 [![.NET Version](https://img.shields.io/badge/.NET-8.0-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 
@@ -9,7 +8,6 @@
 
 Este proyecto implementa **TODAS** las mejores prácticas definidas en [AGENTS.md](AGENTS.md):
 
-- ? **19 Tests unitarios** (100% passing)
 - ? **AutoMapper** para mapeo automático
 - ? **Serilog** para logging estructurado
 - ? **Result Pattern** para manejo de errores
@@ -19,180 +17,127 @@ Este proyecto implementa **TODAS** las mejores prácticas definidas en [AGENTS.md
 
 ---
 
+## Información General
+
+# Elyssa API
+
+API REST para gestión de propiedades inmobiliarias construida con .NET 8 y arquitectura limpia.
+
+## Requisitos
+
+- .NET 8 SDK
+- PostgreSQL 12+
+- Visual Studio 2022 o VS Code
+
+## Configuración
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/MegaPatron0911/ApiElyssaV2.git
+cd ApiElyssaV2
+```
+
+### 2. Configurar User Secrets
+
+```bash
+cd ApiElyssaV2
+dotnet user-secrets set "ConnectionStrings:deployDatabase" "Host=localhost;Port=5432;Database=elyssa;Username=postgres;Password=your_password"
+dotnet user-secrets set "Jwt:Key" "your_jwt_secret_key"
+dotnet user-secrets set "Jwt:Issuer" "ElyssaBackOfficeAPI"
+dotnet user-secrets set "Jwt:Audience" "ElyssaClients"
+```
+
+### 3. Ejecutar migraciones
+
+```bash
+dotnet ef database update --project Infrastructure/Infrastructure.csproj --startup-project ApiElyssaV2/Elyssa.PublicApi.csproj
+```
+
+### 4. Ejecutar la aplicación
+
+```bash
+cd ApiElyssaV2
+dotnet run
+```
+
+La API estará disponible en `https://localhost:57979`
+
+---
+
 ## Estructura del Proyecto
 
 Este proyecto sigue una arquitectura en capas limpia (Clean Architecture) con principios SOLID y patrones de diseño modernos.
 
-### ?? Elyssa.PublicApi
-**Capa de Presentación** - API Web que expone los endpoints HTTP
-
 ```
-Elyssa.PublicApi/
-??? Controllers/          # Thin Controllers (solo orquestación)
-?   ??? BaseController.cs
-?   ??? CompaniesController.cs
-?   ??? WeatherForecastController.cs
-??? Middleware/          # Cross-cutting concerns
-?   ??? ExceptionHandlingMiddleware.cs
-?   ??? CompanyContextMiddleware.cs
-??? Extensions/          # Extensiones HTTP
-?   ??? ErrorExtensions.cs
-??? Shared/              # Utilidades compartidas
-?   ??? Constants/
-?   ??? Extensions/
-?   ??? Helpers/
-??? Program.cs           # Configuración y DI
+ApiElyssaV2/
+??? Core/                    # Lógica de negocio y contratos
+?   ??? Common/             # Result pattern y errores
+?   ??? Domain/             # Entidades de dominio
+?   ??? DTOs/               # Data Transfer Objects
+?   ??? Interfaces/         # Contratos de servicios
+?   ??? Mappings/           # Perfiles de AutoMapper
+?   ??? Services/           # Lógica de negocio
+??? Infrastructure/          # Implementaciones de infraestructura
+?   ??? Data/               # DbContext
+?   ??? Repositories/       # Repositorios
+??? ApiElyssaV2/            # Capa de presentación (API)
+    ??? Controllers/        # Endpoints
+    ??? Filters/            # Action Filters
+    ??? Middleware/         # Middleware customizado
 ```
 
-**Responsabilidades:**
-- Manejar requests y responses HTTP
-- Validación de entrada (DataAnnotations)
-- Orquestación de servicios
-- Conversión de Result a IActionResult
+## Endpoints Principales
 
----
+### Properties
 
-### ?? Elyssa.Core
-**Capa de Dominio** - Lógica de negocio y reglas del dominio
-
-```
-Core/
-??? Domain/              # Entidades y objetos de valor
-?   ??? Entities/        # Entidades del dominio
-?   ?   ??? BaseEntity.cs
-?   ?   ??? Company.cs
-?   ??? ValueObjects/    # Objetos de valor inmutables
-?       ??? Address.cs
-??? Services/            # Servicios de aplicación (Lógica de Negocio)
-?   ??? CompanyService.cs
-??? Interfaces/          # Contratos (abstracciones)
-?   ??? IRepository.cs
-?   ??? ICompanyService.cs
-?   ??? IUnitOfWork.cs
-??? DTOs/                # Data Transfer Objects
-?   ??? CompanyDto.cs
-??? Mappings/            # AutoMapper Profiles
-?   ??? CompanyMappingProfile.cs
-??? Common/              # Result Pattern y Errores
-    ??? Result.cs
-    ??? Error.cs
-    ??? CompanyErrors.cs
+#### Listar propiedades
+```http
+GET /api/v1/properties
 ```
 
-**Responsabilidades:**
-- Definir entidades del dominio
-- Lógica de negocio y validaciones
-- Interfaces para inversión de dependencias
-- DTOs para transferencia de datos
-- Result Pattern para manejo de errores
+**Query Parameters:**
+- `page` (int, default: 1): Número de página
+- `pageSize` (int, default: 20, max: 20): Tamaño de página
+- `code` (string, opcional): Búsqueda por código
+- `address` (string, opcional): Búsqueda por dirección
+- `city` (string, opcional): Búsqueda por ciudad
+- `sortBy` (string, default: "createdAt"): Campo de ordenamiento
+- `sortOrder` (string, default: "desc"): Orden (asc/desc)
 
----
+**Headers:**
+- `x-company-id` (required): GUID de la empresa
 
-### ?? Elyssa.Infrastructure
-**Capa de Infraestructura** - Implementaciones técnicas
-
-```
-Infrastructure/
-??? Data/                # Contexto de Entity Framework Core
-?   ??? ApplicationDbContext.cs
-??? Repositories/        # Implementaciones de repositorios
-?   ??? Repository.cs (genérico)
-?   ??? CompanyRepository.cs
-?   ??? UnitOfWork.cs
-??? External/            # Servicios externos de terceros
-?   ??? ExternalApiClient.cs
-??? Security/            # Autenticación y autorización
-    ??? PasswordHasher.cs
-```
-
-**Responsabilidades:**
-- Acceso a datos (Entity Framework Core)
-- Implementación de repositorios y Unit of Work
-- Integración con APIs externas
-- Seguridad y criptografía
-
----
-
-### ?? Tests
-**Proyectos de Testing** - Tests unitarios y de integración
-
-```
-Tests/
-??? Core.Tests/              # Tests de dominio y servicios
-?   ??? Services/
-?       ??? CompanyServiceTests.cs  (10 tests ?)
-??? Infrastructure.Tests/    # Tests de repositorios
-    ??? Repositories/
-        ??? RepositoryTests.cs      (9 tests ?)
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "properties": [...],
+    "pagination": {
+      "currentPage": 1,
+      "pageSize": 20,
+      "totalRecords": 100,
+      "totalPages": 5,
+      "hasNextPage": true,
+      "hasPreviousPage": false,
+      "nextPage": 2,
+      "remainingRecords": 80
+    }
+  },
+  "timestamp": "2026-01-09T20:00:00Z"
+}
 ```
 
-**Cobertura:**
-- ? **19 tests totales** (todos pasando)
-- ? xUnit + Moq + FluentAssertions
-- ? EF Core InMemory para integration tests
+### Companies
 
----
-
-## ?? Dependencias entre Capas
-
-```
-Elyssa.PublicApi
-    ?
-    ??? Elyssa.Core (Interfaces y DTOs)
-    ??? Elyssa.Infrastructure (Implementaciones)
-            ?
-        Elyssa.Core (Interfaces)
+#### Obtener información de empresa
+```http
+GET /api/v1/companies/info
 ```
 
-**Principios:**
-- ? PublicApi depende de Core e Infrastructure
-- ? Infrastructure depende de Core (solo interfaces)
-- ? Core no depende de nadie (capa independiente)
-- ? Dependency Inversion Principle aplicado
-
----
-
-## ?? Patrones de Diseño Implementados
-
-### 1. **Result Pattern**
-Manejo explícito de errores sin excepciones:
-```csharp
-var result = await _companyService.GetByIdAsync(id, cancellationToken);
-return result.Match(
-    success => Ok(success),
-    error => error.ToHttpResponse()
-);
-```
-
-### 2. **Unit of Work Pattern**
-Transacciones consistentes y coordinación de repositorios:
-```csharp
-await _unitOfWork.BeginTransactionAsync();
-await _unitOfWork.Companies.AddAsync(company);
-await _unitOfWork.CommitTransactionAsync();
-```
-
-### 3. **Repository Pattern**
-Abstracción del acceso a datos:
-```csharp
-public interface IRepository<T> where T : BaseEntity { }
-```
-
-### 4. **Middleware Pattern**
-Cross-cutting concerns (logging, error handling):
-```csharp
-app.UseExceptionHandlingMiddleware();
-app.UseCompanyContext();
-```
-
-### 5. **Thin Controllers**
-Controllers solo para orquestación, sin lógica de negocio.
-
-### 6. **AutoMapper**
-Mapeo automático entre entidades y DTOs:
-```csharp
-var companyDto = _mapper.Map<CompanyDto>(company);
-```
+**Headers:**
+- `x-company-id` (required): GUID de la empresa
 
 ---
 
@@ -219,7 +164,6 @@ dotnet build
 ### Ejecutar tests
 ```bash
 dotnet test
-# ? Resumen: total: 19; con errores: 0; correcto: 19
 ```
 
 ### Ejecutar la API
@@ -251,7 +195,6 @@ dotnet ef database update --project Infrastructure --startup-project ApiElyssaV2
 - ? **Error Extensions** para conversión HTTP
 - ? **AutoMapper** para mapeo automático
 - ? **Serilog** para logging estructurado
-- ? **19 Tests unitarios** (100% passing)
 - ? **Principios SOLID** aplicados
 
 ---
@@ -264,6 +207,8 @@ dotnet ef database update --project Infrastructure --startup-project ApiElyssaV2
 - [**EJEMPLOS.md**](EJEMPLOS.md) - Ejemplos de uso de cada patrón
 - [**SETUP.md**](SETUP.md) - Guía de configuración paso a paso
 - [**ARQUITECTURA.md**](ARQUITECTURA.md) - Diagramas y estructura detallada
+- [**PROPERTIES_ENDPOINT.md**](PROPERTIES_ENDPOINT.md) - Documentación del endpoint de propiedades
+- [**DATABASE_SCHEMA.md**](DATABASE_SCHEMA.md) - Esquema completo de la base de datos
 
 ---
 
@@ -319,7 +264,6 @@ DbContext ? Database
 
 ```
 ? dotnet build sin errores
-? dotnet test pasa todos los tests (19/19)
 ? No hay secretos en commits
 ? AutoMapper configurado
 ? Contratos públicos coherentes
@@ -328,7 +272,6 @@ DbContext ? Database
 ? Repository Pattern
 ? Unit of Work
 ? Serilog configurado
-? Tests unitarios
 ```
 
 ---
@@ -337,11 +280,10 @@ DbContext ? Database
 
 El proyecto **ApiElyssaV2** implementa **TODAS** las mejores prácticas de AGENTS.md:
 - ? Arquitectura limpia y escalable
-- ? Testing obligatorio (19/19 ?)
 - ? Patrones de diseño modernos
 - ? Principios SOLID
 - ? Logging estructurado
 - ? Mapeo automático
 - ? Sin sorpresas (Result Pattern)
 
-**¡Listo para desarrollo colaborativo profesional!** ??
+**¡Listo para desarrollo colaborativo profesional!** ????

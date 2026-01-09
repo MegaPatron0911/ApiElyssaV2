@@ -1,8 +1,4 @@
 namespace Elyssa.Core.Common;
-
-/// <summary>
-/// Representa el resultado de una operación que puede tener éxito o fallar
-/// </summary>
 public class Result<T>
 {
     public bool IsSuccess { get; }
@@ -26,10 +22,6 @@ public class Result<T>
         return IsSuccess ? onSuccess(Value!) : onFailure(Error!);
     }
 }
-
-/// <summary>
-/// Result sin valor de retorno
-/// </summary>
 public class Result
 {
     public bool IsSuccess { get; }

@@ -11,6 +11,8 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<Company> Companies { get; set; }
+    public DbSet<Property> Properties { get; set; }
+    public DbSet<PropertyType> PropertyTypes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,6 +37,50 @@ public class ApplicationDbContext : DbContext
             
             entity.Ignore(e => e.IsActive);
             entity.Ignore(e => e.Description);
+        });
+
+        modelBuilder.Entity<Property>(entity =>
+        {
+            entity.ToTable("Property");
+            
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("PropertyId");
+            
+            entity.Property(e => e.Code).HasMaxLength(100).HasColumnName("Code");
+            entity.Property(e => e.Address).HasMaxLength(500).IsRequired().HasColumnName("Address");
+            entity.Property(e => e.City).IsRequired().HasColumnName("City");
+            entity.Property(e => e.Neighborhood).IsRequired().HasColumnName("Neighborhood");
+            entity.Property(e => e.IsRented).HasColumnName("IsRented");
+            entity.Property(e => e.BuiltArea).HasColumnType("numeric").HasColumnName("BuiltArea");
+            entity.Property(e => e.LotArea).HasColumnType("numeric").HasColumnName("LotArea");
+            entity.Property(e => e.Levels).HasColumnName("Levels");
+            entity.Property(e => e.PropertyTypeId).HasColumnName("PropertyTypeId");
+            entity.Property(e => e.CompanyId).HasColumnName("CompanyId");
+            entity.Property(e => e.IsActive).HasColumnName("IsActive");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreationDate");
+            entity.Property(e => e.UpdatedAt).HasColumnName("ModificationDate");
+
+            entity.HasOne(e => e.PropertyType)
+                .WithMany(pt => pt.Properties)
+                .HasForeignKey(e => e.PropertyTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Company)
+                .WithMany()
+                .HasForeignKey(e => e.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PropertyType>(entity =>
+        {
+            entity.ToTable("PropertyType");
+            
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("PropertyTypeId");
+            
+            entity.Property(e => e.Name).HasMaxLength(200).IsRequired().HasColumnName("typeName");
+            entity.Ignore(e => e.CreatedAt);
+            entity.Ignore(e => e.UpdatedAt);
         });
     }
 }

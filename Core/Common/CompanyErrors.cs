@@ -1,8 +1,4 @@
 namespace Elyssa.Core.Common;
-
-/// <summary>
-/// Errores relacionados con Company
-/// </summary>
 public static class CompanyErrors
 {
     public static Error NotFound(Guid id) =>

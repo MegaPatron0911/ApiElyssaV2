@@ -1,11 +1,9 @@
+using Elyssa.Core.DTOs;
 using System.Net;
 using System.Text.Json;
 
 namespace Elyssa.PublicApi.Middleware;
 
-/// <summary>
-/// Middleware para manejo global de excepciones
-/// </summary>
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
@@ -25,7 +23,7 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ocurrió una excepción no controlada: {Message}", ex.Message);
+            _logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
             await HandleExceptionAsync(context, ex);
         }
     }
@@ -33,28 +31,36 @@ public class ExceptionHandlingMiddleware
     private static Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         var statusCode = HttpStatusCode.InternalServerError;
-        var message = "Ocurrió un error interno en el servidor";
-
-        var problemDetails = new
+        var isDevelopment = context.RequestServices.GetService<IWebHostEnvironment>()?.IsDevelopment() ?? false;
+        
+        var errorResponse = new ApiErrorResponse
         {
-            type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
-            title = "Internal Server Error",
-            status = (int)statusCode,
-            detail = message,
-            traceId = context.TraceIdentifier
+            Success = false,
+            Error = new ErrorDetail
+            {
+                Code = "INTERNAL_SERVER_ERROR",
+                Message = "Ocurrió un error interno en el servidor",
+                Details = isDevelopment 
+                    ? $"ERROR: {exception.Message}\n\nSTACK TRACE:\n{exception.StackTrace}\n\nINNER EXCEPTION:\n{exception.InnerException?.Message}\n{exception.InnerException?.StackTrace}"
+                    : $"TraceId: {context.TraceIdentifier}. Por favor contacte al administrador."
+            },
+            Timestamp = DateTime.UtcNow
         };
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
 
-        var json = JsonSerializer.Serialize(problemDetails);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        };
+
+        var json = JsonSerializer.Serialize(errorResponse, options);
         return context.Response.WriteAsync(json);
     }
 }
 
-/// <summary>
-/// Extensión para registrar el middleware
-/// </summary>
 public static class ExceptionHandlingMiddlewareExtensions
 {
     public static IApplicationBuilder UseExceptionHandlingMiddleware(this IApplicationBuilder builder)

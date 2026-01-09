@@ -2,6 +2,7 @@
 using Elyssa.Core.Services;
 using Elyssa.Infrastructure.Data;
 using Elyssa.Infrastructure.Repositories;
+using Elyssa.PublicApi.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Reflection;
@@ -49,7 +50,9 @@ try
 
     builder.Services.AddProblemDetails();
     builder.Services.AddMemoryCache();
-    builder.Services.AddAutoMapper(typeof(Elyssa.Core.Mappings.CompanyMappingProfile));
+    builder.Services.AddAutoMapper(
+        typeof(Elyssa.Core.Mappings.CompanyMappingProfile),
+        typeof(Elyssa.Core.Mappings.PropertyMappingProfile));
 
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(
@@ -59,6 +62,7 @@ try
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
     builder.Services.AddScoped<ICompanyService, CompanyService>();
+    builder.Services.AddScoped<IPropertyService, PropertyService>();
 
     builder.Services.AddCors(options =>
     {
@@ -74,8 +78,7 @@ try
 
     app.UseSerilogRequestLogging();
 
-    app.UseExceptionHandler();
-    app.UseStatusCodePages();
+    app.UseExceptionHandlingMiddleware();
 
     if (app.Environment.IsDevelopment())
     {

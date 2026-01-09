@@ -1,18 +1,11 @@
 namespace Elyssa.Core.DTOs;
 
-/// <summary>
-/// Response wrapper para endpoints públicos
-/// </summary>
 public class ApiResponse<T>
 {
     public bool Success { get; set; } = true;
     public T? Data { get; set; }
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 }
-
-/// <summary>
-/// Response de error para endpoints públicos
-/// </summary>
 public class ApiErrorResponse
 {
     public bool Success { get; set; } = false;

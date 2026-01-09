@@ -1,48 +1,46 @@
 using Elyssa.Core.Common;
+using Elyssa.Core.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elyssa.PublicApi.Extensions;
 
 public static class ErrorExtensions
 {
-    public static IActionResult ToHttpResponse(this Error error)
+    public static IActionResult ToApiErrorResponse(this Error error)
     {
-        var problemDetails = new ProblemDetails
+        var response = new ApiErrorResponse
         {
-            Title = GetTitle(error.Type),
-            Status = GetStatusCode(error.Type),
-            Detail = error.Message,
-            Type = error.Code
+            Success = false,
+            Error = new ErrorDetail
+            {
+                Code = error.Code,
+                Message = error.Message,
+                Details = GetErrorDetails(error)
+            },
+            Timestamp = DateTime.UtcNow
         };
 
         return error.Type switch
         {
-            ErrorType.Validation => new BadRequestObjectResult(problemDetails),
-            ErrorType.NotFound => new NotFoundObjectResult(problemDetails),
-            ErrorType.Conflict => new ConflictObjectResult(problemDetails),
-            ErrorType.Unauthorized => new UnauthorizedObjectResult(problemDetails),
-            ErrorType.Forbidden => new ObjectResult(problemDetails) { StatusCode = 403 },
-            _ => new ObjectResult(problemDetails) { StatusCode = 500 }
+            ErrorType.Validation => new BadRequestObjectResult(response),
+            ErrorType.NotFound => new NotFoundObjectResult(response),
+            ErrorType.Conflict => new ConflictObjectResult(response),
+            ErrorType.Unauthorized => new UnauthorizedObjectResult(response),
+            ErrorType.Forbidden => new ObjectResult(response) { StatusCode = 403 },
+            _ => new ObjectResult(response) { StatusCode = 500 }
         };
     }
 
-    private static string GetTitle(ErrorType errorType) => errorType switch
+    private static string GetErrorDetails(Error error)
     {
-        ErrorType.Validation => "Validation Error",
-        ErrorType.NotFound => "Resource Not Found",
-        ErrorType.Conflict => "Conflict",
-        ErrorType.Unauthorized => "Unauthorized",
-        ErrorType.Forbidden => "Forbidden",
-        _ => "Internal Server Error"
-    };
-
-    private static int GetStatusCode(ErrorType errorType) => errorType switch
-    {
-        ErrorType.Validation => StatusCodes.Status400BadRequest,
-        ErrorType.NotFound => StatusCodes.Status404NotFound,
-        ErrorType.Conflict => StatusCodes.Status409Conflict,
-        ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
-        ErrorType.Forbidden => StatusCodes.Status403Forbidden,
-        _ => StatusCodes.Status500InternalServerError
-    };
+        return error.Type switch
+        {
+            ErrorType.NotFound => $"El recurso solicitado no fue encontrado: {error.Message}",
+            ErrorType.Validation => $"Validación fallida: {error.Message}",
+            ErrorType.Conflict => $"Conflicto de recursos: {error.Message}",
+            ErrorType.Unauthorized => "No autorizado para realizar esta operación",
+            ErrorType.Forbidden => "Acceso denegado a este recurso",
+            _ => "Error interno del servidor"
+        };
+    }
 }

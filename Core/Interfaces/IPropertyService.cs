@@ -9,4 +9,9 @@ public interface IPropertyService
         Guid companyId,
         PropertyFilterDto filter,
         CancellationToken cancellationToken = default);
+    
+    Task<Result<PropertyDetailResponse>> GetDetailAsync(
+        Guid propertyId,
+        Guid companyId,
+        CancellationToken cancellationToken = default);
 }

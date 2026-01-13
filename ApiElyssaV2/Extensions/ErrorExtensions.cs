@@ -15,7 +15,8 @@ public static class ErrorExtensions
             {
                 Code = error.Code,
                 Message = error.Message,
-                Details = GetErrorDetails(error)
+                Details = GetErrorDetails(error),
+                Field = error.Field
             },
             Timestamp = DateTime.UtcNow
         };
@@ -27,6 +28,8 @@ public static class ErrorExtensions
             ErrorType.Conflict => new ConflictObjectResult(response),
             ErrorType.Unauthorized => new UnauthorizedObjectResult(response),
             ErrorType.Forbidden => new ObjectResult(response) { StatusCode = 403 },
+            ErrorType.UnprocessableEntity => new UnprocessableEntityObjectResult(response),
+            ErrorType.ServiceUnavailable => new ObjectResult(response) { StatusCode = 503 },
             _ => new ObjectResult(response) { StatusCode = 500 }
         };
     }
@@ -40,6 +43,8 @@ public static class ErrorExtensions
             ErrorType.Conflict => $"Conflicto de recursos: {error.Message}",
             ErrorType.Unauthorized => "No autorizado para realizar esta operación",
             ErrorType.Forbidden => "Acceso denegado a este recurso",
+            ErrorType.UnprocessableEntity => $"La entidad no se puede procesar: {error.Message}",
+            ErrorType.ServiceUnavailable => $"Servicio no disponible: {error.Message}",
             _ => "Error interno del servidor"
         };
     }

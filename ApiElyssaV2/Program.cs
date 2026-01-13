@@ -89,6 +89,7 @@ try
 
     builder.Services.AddScoped<ICompanyService, CompanyService>();
     builder.Services.AddScoped<IPropertyService, PropertyService>();
+    builder.Services.AddScoped<IInventoryService, InventoryService>();
 
     builder.Services.AddCors(options =>
     {

@@ -45,3 +45,12 @@ public interface IPropertyRepository : IRepository<Property>
     
     Task<int> CountInventoriesByPropertyAsync(Guid propertyId, CancellationToken cancellationToken = default);
 }
+
+public interface IInventoryRepository : IRepository<Inventory>
+{
+    Task<Inventory?> GetDetailByIdAsync(Guid inventoryId, CancellationToken cancellationToken = default);
+    
+    Task<int> CountEnvironmentsByInventoryAsync(Guid inventoryId, CancellationToken cancellationToken = default);
+    
+    Task<int> CountItemsByInventoryAsync(Guid inventoryId, CancellationToken cancellationToken = default);
+}

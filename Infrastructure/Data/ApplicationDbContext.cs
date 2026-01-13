@@ -13,6 +13,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Company> Companies { get; set; }
     public DbSet<Property> Properties { get; set; }
     public DbSet<PropertyType> PropertyTypes { get; set; }
+    public DbSet<Inventory> Inventories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -85,6 +86,34 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(200).IsRequired().HasColumnName("typeName");
             entity.Ignore(e => e.CreatedAt);
             entity.Ignore(e => e.UpdatedAt);
+        });
+
+        modelBuilder.Entity<Inventory>(entity =>
+        {
+            entity.ToTable("Inventory");
+            
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("InventoryId");
+            
+            entity.Property(e => e.PropertyId).HasColumnName("PropertyId");
+            entity.Property(e => e.InventoryType).HasColumnName("InventoryType");
+            entity.Property(e => e.IsSigned).HasColumnName("IsSigned");
+            entity.Property(e => e.IsRemoteSigned).HasColumnName("IsRemoteSigned");
+            entity.Property(e => e.RentalPrice).HasColumnType("numeric").HasColumnName("RentalPrice");
+            entity.Property(e => e.Currency).HasMaxLength(10).HasColumnName("Currency");
+            entity.Property(e => e.ApprovalCode).HasColumnName("Approval_Code");
+            entity.Property(e => e.AgentSignatureDate).HasColumnName("AgentSignatureDate");
+            entity.Property(e => e.OwnerSignatureDate).HasColumnName("OwnerSignatureDate");
+            entity.Property(e => e.SignatureDate).HasColumnName("SignatureDate");
+            entity.Property(e => e.PdfUrl).HasColumnName("PfdUrl");
+            entity.Property(e => e.IsActive).HasColumnName("IsActive");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreationDate");
+            entity.Ignore(e => e.UpdatedAt);
+
+            entity.HasOne(e => e.Property)
+                .WithMany()
+                .HasForeignKey(e => e.PropertyId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

@@ -11,6 +11,7 @@ public class UnitOfWork : IUnitOfWork
     private IDbContextTransaction? _transaction;
     private ICompanyRepository? _companies;
     private IPropertyRepository? _properties;
+    private IInventoryRepository? _inventories;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -22,6 +23,9 @@ public class UnitOfWork : IUnitOfWork
 
     public IPropertyRepository Properties =>
         _properties ??= new PropertyRepository(_context);
+
+    public IInventoryRepository Inventories =>
+        _inventories ??= new InventoryRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

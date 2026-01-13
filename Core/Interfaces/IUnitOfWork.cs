@@ -3,13 +3,11 @@ using Elyssa.Core.Interfaces;
 
 namespace Elyssa.Core.Interfaces;
 
-/// <summary>
-/// Unit of Work para transacciones
-/// </summary>
 public interface IUnitOfWork : IDisposable
 {
     ICompanyRepository Companies { get; }
     IPropertyRepository Properties { get; }
+    IInventoryRepository Inventories { get; }
     
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);

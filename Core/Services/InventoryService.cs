@@ -50,21 +50,20 @@ public class InventoryService : IInventoryService
                 return Result<InventoryDetailResponse>.Failure(InventoryErrors.ForbiddenResource(inventoryId, companyId));
             }
 
-            var environmentsTask = _unitOfWork.Inventories
-                .CountEnvironmentsByInventoryAsync(inventoryId, cancellationToken);
+            var totalEnvironments = await _unitOfWork.Inventories
+                .CountEnvironmentsByInventoryAsync(inventoryId, cancellationToken)
+                .ConfigureAwait(false);
             
-            var itemsTask = _unitOfWork.Inventories
-                .CountItemsByInventoryAsync(inventoryId, cancellationToken);
-
-            await Task.WhenAll(environmentsTask, itemsTask).ConfigureAwait(false);
-
-            var totalEnvironments = await environmentsTask;
-            var totalItems = await itemsTask;
+            var totalItems = await _unitOfWork.Inventories
+                .CountItemsByInventoryAsync(inventoryId, cancellationToken)
+                .ConfigureAwait(false);
 
             var inventoryTypeName = inventory.InventoryType switch
             {
-                InventoryType.PLACEMENT => InventoryTypeNames.PLACEMENT,
-                InventoryType.WITHDRAWAL => InventoryTypeNames.WITHDRAWAL,
+                InventoryType.Captacion => InventoryTypeNames.Captacion,
+                InventoryType.Colocación => InventoryTypeNames.Colocacion,
+                InventoryType.PreVisita => InventoryTypeNames.PreVisita,
+                InventoryType.Desocupación => InventoryTypeNames.Desocupación,
                 _ => "Desconocido"
             };
 

@@ -57,7 +57,7 @@ try
         c.SwaggerDoc("v1", new()
         {
             Title = "Elyssa API",
-            Version = "v2",
+            Version = "v1",
             Description = "API BackOffice Elyssa",
             Contact = new()
             {

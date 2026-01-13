@@ -2,13 +2,17 @@ using Elyssa.Core.Domain.Entities;
 using Elyssa.Core.Interfaces;
 using Elyssa.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Elyssa.Infrastructure.Repositories;
 
 public class InventoryRepository : Repository<Inventory>, IInventoryRepository
 {
-    public InventoryRepository(ApplicationDbContext context) : base(context)
+    private readonly ILogger<InventoryRepository> _logger;
+
+    public InventoryRepository(ApplicationDbContext context, ILogger<InventoryRepository> logger) : base(context)
     {
+        _logger = logger;
     }
 
     public async Task<Inventory?> GetDetailByIdAsync(
@@ -29,17 +33,16 @@ public class InventoryRepository : Repository<Inventory>, IInventoryRepository
     {
         try
         {
-            var sql = @"SELECT COUNT(*)::integer AS ""Value"" 
-                        FROM ""EnvironmentDiagnostics"" 
-                        WHERE ""InventoryId"" = {0} AND ""IsActive"" = true";
-            
-            return await _context.Database
-                .SqlQueryRaw<int>(sql, inventoryId)
-                .FirstOrDefaultAsync(cancellationToken)
+            var result = await _context.Database
+                .SqlQueryRaw<int>($@"SELECT COUNT(*)::integer AS ""Value"" FROM ""EnvironmentDiagnostics"" WHERE ""InventoryId"" = '{inventoryId}'")
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
+            
+            return result.FirstOrDefault();
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error counting EnvironmentDiagnostics for inventory {InventoryId}", inventoryId);
             return 0;
         }
     }
@@ -50,21 +53,23 @@ public class InventoryRepository : Repository<Inventory>, IInventoryRepository
     {
         try
         {
-            var sql = @"SELECT COUNT(*)::integer AS ""Value"" 
-                        FROM ""ItemDiagnostic"" id
-                        INNER JOIN ""EnvironmentDiagnostics"" ed 
-                            ON id.""EnvironmentDiagnosticsId"" = ed.""EnvironmentDiagnosticsId""
-                        WHERE ed.""InventoryId"" = {0} 
-                          AND id.""IsActive"" = true 
-                          AND ed.""IsActive"" = true";
+            var sqlQuery = $@"
+                SELECT COUNT(*)::integer AS ""Value"" 
+                FROM ""ItemDiagnostic"" id
+                INNER JOIN ""EnvironmentDiagnostics"" ed 
+                    ON id.""EnvironmentDiagnosticId"" = ed.""EnvironmentDiagnosticId""
+                WHERE ed.""InventoryId"" = '{inventoryId}'";
             
-            return await _context.Database
-                .SqlQueryRaw<int>(sql, inventoryId)
-                .FirstOrDefaultAsync(cancellationToken)
+            var result = await _context.Database
+                .SqlQueryRaw<int>(sqlQuery)
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
+            
+            return result.FirstOrDefault();
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error counting ItemDiagnostic for inventory {InventoryId}", inventoryId);
             return 0;
         }
     }

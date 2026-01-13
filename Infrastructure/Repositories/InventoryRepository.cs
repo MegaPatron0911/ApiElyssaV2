@@ -73,4 +73,66 @@ public class InventoryRepository : Repository<Inventory>, IInventoryRepository
             return 0;
         }
     }
+
+    public async Task<(IEnumerable<Inventory> Inventories, int TotalCount)> GetPagedAsync(
+        Guid companyId,
+        int page,
+        int pageSize,
+        int? inventoryType,
+        bool? isSigned,
+        string sortBy,
+        string sortOrder,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Query base: solo inventarios activos de propiedades de la compañía
+            var query = _dbSet.AsNoTracking()
+                .Include(i => i.Property)
+                .Where(i => i.IsActive && i.Property!.CompanyId == companyId);
+
+            // Filtro por tipo de inventario
+            if (inventoryType.HasValue)
+            {
+                query = query.Where(i => i.InventoryType == inventoryType.Value);
+            }
+
+            // Filtro por firmado
+            if (isSigned.HasValue)
+            {
+                query = query.Where(i => i.IsSigned == isSigned.Value);
+            }
+
+            // Total de registros (antes de paginación)
+            var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+
+            // Ordenamiento
+            query = sortBy.ToLowerInvariant() switch
+            {
+                "signaturedate" => sortOrder == "asc"
+                    ? query.OrderBy(i => i.SignatureDate)
+                    : query.OrderByDescending(i => i.SignatureDate),
+                "rentalprice" => sortOrder == "asc"
+                    ? query.OrderBy(i => i.RentalPrice)
+                    : query.OrderByDescending(i => i.RentalPrice),
+                _ => sortOrder == "asc"
+                    ? query.OrderBy(i => i.CreatedAt)
+                    : query.OrderByDescending(i => i.CreatedAt)
+            };
+
+            // Paginación
+            var inventories = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            return (inventories, totalCount);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetPagedAsync for company {CompanyId}", companyId);
+            throw;
+        }
+    }
 }

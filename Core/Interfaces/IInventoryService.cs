@@ -9,4 +9,9 @@ public interface IInventoryService
         Guid inventoryId,
         Guid companyId,
         CancellationToken cancellationToken = default);
+
+    Task<Result<InventoryListResponse>> GetPagedInventoriesAsync(
+        Guid companyId,
+        InventoryFilterDto filter,
+        CancellationToken cancellationToken = default);
 }

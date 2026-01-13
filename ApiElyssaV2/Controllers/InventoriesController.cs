@@ -25,6 +25,35 @@ public class InventoriesController : ControllerBase
     }
 
     /// <summary>
+    /// Obtiene un listado paginado de inventarios con opciones de filtrado
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(ApiResponse<InventoryListResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetInventories(
+        [FromHeader(Name = "x-company-id")] Guid companyId,
+        [FromQuery] InventoryFilterDto filter,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogDebug("Processing inventory list request for company {CompanyId}", companyId);
+
+        var result = await _inventoryService.GetPagedInventoriesAsync(
+            companyId,
+            filter,
+            cancellationToken);
+
+        return result.Match<IActionResult>(
+            success => Ok(new ApiResponse<InventoryListResponse>
+            {
+                Success = true,
+                Data = success,
+                Timestamp = DateTime.UtcNow
+            }),
+            error => error.ToApiErrorResponse());
+    }
+
+    /// <summary>
     /// Obtiene la información detallada de un inventario específico
     /// </summary>
     [HttpGet("details")]

@@ -140,16 +140,13 @@ public class PropertyService : IPropertyService
 
             var property = propertyWithoutFilter;
 
-            var environmentsTask = _unitOfWork.Properties
-                .CountEnvironmentsByPropertyAsync(propertyId, cancellationToken);
+            var totalEnvironments = await _unitOfWork.Properties
+                .CountEnvironmentsByPropertyAsync(propertyId, cancellationToken)
+                .ConfigureAwait(false);
             
-            var inventoriesTask = _unitOfWork.Properties
-                .CountInventoriesByPropertyAsync(propertyId, cancellationToken);
-
-            await Task.WhenAll(environmentsTask, inventoriesTask).ConfigureAwait(false);
-
-            var totalEnvironments = await environmentsTask;
-            var totalInventories = await inventoriesTask;
+            var totalInventories = await _unitOfWork.Properties
+                .CountInventoriesByPropertyAsync(propertyId, cancellationToken)
+                .ConfigureAwait(false);
 
             var response = _mapper.Map<PropertyDetailResponse>(property);
             

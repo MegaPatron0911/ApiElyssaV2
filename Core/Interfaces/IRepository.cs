@@ -53,4 +53,14 @@ public interface IInventoryRepository : IRepository<Inventory>
     Task<int> CountEnvironmentsByInventoryAsync(Guid inventoryId, CancellationToken cancellationToken = default);
     
     Task<int> CountItemsByInventoryAsync(Guid inventoryId, CancellationToken cancellationToken = default);
+    
+    Task<(IEnumerable<Inventory> Inventories, int TotalCount)> GetPagedAsync(
+        Guid companyId,
+        int page,
+        int pageSize,
+        int? inventoryType,
+        bool? isSigned,
+        string sortBy,
+        string sortOrder,
+        CancellationToken cancellationToken = default);
 }

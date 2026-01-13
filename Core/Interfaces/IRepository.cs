@@ -36,4 +36,12 @@ public interface IPropertyRepository : IRepository<Property>
     Task<bool> HasInventoriesAsync(Guid propertyId, CancellationToken cancellationToken = default);
     
     Task<Dictionary<Guid, bool>> GetInventoriesExistenceAsync(IEnumerable<Guid> propertyIds, CancellationToken cancellationToken = default);
+    
+    Task<Property?> GetDetailByIdAsync(Guid propertyId, Guid companyId, CancellationToken cancellationToken = default);
+    
+    Task<Property?> GetByIdWithoutCompanyFilterAsync(Guid propertyId, CancellationToken cancellationToken = default);
+    
+    Task<int> CountEnvironmentsByPropertyAsync(Guid propertyId, CancellationToken cancellationToken = default);
+    
+    Task<int> CountInventoriesByPropertyAsync(Guid propertyId, CancellationToken cancellationToken = default);
 }

@@ -14,18 +14,25 @@ public class CompanyRepository : Repository<Company>, ICompanyRepository
     public async Task<Company?> GetByIdWithPlanAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _dbSet
-            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public async Task<int> CountActiveUsersByCompanyAsync(Guid companyId, CancellationToken cancellationToken = default)
     {
         var sql = @"SELECT COUNT(*)::integer AS ""Value"" FROM ""EstateAgentInCompany"" WHERE ""CompanyId"" = {0} AND ""IsActive"" = true";
-        return await _context.Database.SqlQueryRaw<int>(sql, companyId).FirstOrDefaultAsync(cancellationToken);
+        return await _context.Database
+            .SqlQueryRaw<int>(sql, companyId)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public async Task<int> CountActivePropertiesByCompanyAsync(Guid companyId, CancellationToken cancellationToken = default)
     {
         var sql = @"SELECT COUNT(*)::integer AS ""Value"" FROM ""Property"" WHERE ""CompanyId"" = {0} AND ""IsActive"" = true";
-        return await _context.Database.SqlQueryRaw<int>(sql, companyId).FirstOrDefaultAsync(cancellationToken);
+        return await _context.Database
+            .SqlQueryRaw<int>(sql, companyId)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 }

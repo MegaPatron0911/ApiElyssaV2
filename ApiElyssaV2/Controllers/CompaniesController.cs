@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Elyssa.Core.DTOs;
 using Elyssa.Core.Interfaces;
 using Elyssa.PublicApi.Extensions;
@@ -5,9 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Elyssa.PublicApi.Controllers;
 
-[Route("api/v1/[controller]")]
-[Produces("application/json")]
 [ApiController]
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("1.0")]
+[Produces("application/json")]
 public class CompaniesController : ControllerBase
 {
     private readonly ICompanyService _companyService;

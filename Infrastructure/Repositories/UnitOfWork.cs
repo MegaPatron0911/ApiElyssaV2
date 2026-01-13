@@ -25,35 +25,37 @@ public class UnitOfWork : IUnitOfWork
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.SaveChangesAsync(cancellationToken);
+        return await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        _transaction = await _context.Database
+            .BeginTransactionAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            await _context.SaveChangesAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             
             if (_transaction != null)
             {
-                await _transaction.CommitAsync(cancellationToken);
+                await _transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             }
         }
         catch
         {
-            await RollbackTransactionAsync(cancellationToken);
+            await RollbackTransactionAsync(cancellationToken).ConfigureAwait(false);
             throw;
         }
         finally
         {
             if (_transaction != null)
             {
-                await _transaction.DisposeAsync();
+                await _transaction.DisposeAsync().ConfigureAwait(false);
                 _transaction = null;
             }
         }
@@ -63,8 +65,8 @@ public class UnitOfWork : IUnitOfWork
     {
         if (_transaction != null)
         {
-            await _transaction.RollbackAsync(cancellationToken);
-            await _transaction.DisposeAsync();
+            await _transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            await _transaction.DisposeAsync().ConfigureAwait(false);
             _transaction = null;
         }
     }

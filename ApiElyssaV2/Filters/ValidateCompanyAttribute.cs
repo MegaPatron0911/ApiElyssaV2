@@ -17,7 +17,8 @@ public class ValidateCompanyAttribute : Attribute, IAsyncActionFilter
         {
             var error = Error.Validation(
                 "MISSING_COMPANY_ID",
-                "El header x-company-id es requerido");
+                "El header x-company-id es requerido",
+                "x-company-id");
             context.Result = error.ToApiErrorResponse();
             return;
         }
@@ -30,7 +31,8 @@ public class ValidateCompanyAttribute : Attribute, IAsyncActionFilter
 
             var error = Error.Validation(
                 "INVALID_COMPANY_ID",
-                "El header x-company-id no puede estar vacío");
+                "El header x-company-id no puede estar vacío",
+                "x-company-id");
             context.Result = error.ToApiErrorResponse();
             return;
         }

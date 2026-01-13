@@ -1,5 +1,6 @@
 using AutoMapper;
 using Elyssa.Core.Common;
+using Elyssa.Core.Common.Constants;
 using Elyssa.Core.Domain.Entities;
 using Elyssa.Core.DTOs;
 using Elyssa.Core.Interfaces;
@@ -12,7 +13,6 @@ public class CompanyService : ICompanyService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IMemoryCache _cache;
-    private const int CacheExpirationMinutes = 5;
 
     public CompanyService(IUnitOfWork unitOfWork, IMapper mapper, IMemoryCache cache)
     {
@@ -23,7 +23,9 @@ public class CompanyService : ICompanyService
 
     public async Task<Result<CompanyDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var company = await _unitOfWork.Companies.GetByIdAsync(id, cancellationToken);
+        var company = await _unitOfWork.Companies
+            .GetByIdAsync(id, cancellationToken)
+            .ConfigureAwait(false);
         
         if (company == null)
             return Result<CompanyDto>.Failure(CompanyErrors.NotFound(id));
@@ -33,7 +35,10 @@ public class CompanyService : ICompanyService
 
     public async Task<Result<IEnumerable<CompanyDto>>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var companies = await _unitOfWork.Companies.GetAllAsync(cancellationToken);
+        var companies = await _unitOfWork.Companies
+            .GetAllAsync(cancellationToken)
+            .ConfigureAwait(false);
+        
         var companiesDto = _mapper.Map<IEnumerable<CompanyDto>>(companies);
         
         return Result<IEnumerable<CompanyDto>>.Success(companiesDto);
@@ -47,15 +52,20 @@ public class CompanyService : ICompanyService
         var company = _mapper.Map<Company>(companyDto);
         company.Id = Guid.NewGuid();
 
-        var createdCompany = await _unitOfWork.Companies.AddAsync(company, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var createdCompany = await _unitOfWork.Companies
+            .AddAsync(company, cancellationToken)
+            .ConfigureAwait(false);
+        
+        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return Result<CompanyDto>.Success(_mapper.Map<CompanyDto>(createdCompany));
     }
 
     public async Task<Result> UpdateAsync(Guid id, CompanyDto companyDto, CancellationToken cancellationToken = default)
     {
-        var company = await _unitOfWork.Companies.GetByIdAsync(id, cancellationToken);
+        var company = await _unitOfWork.Companies
+            .GetByIdAsync(id, cancellationToken)
+            .ConfigureAwait(false);
         
         if (company == null)
             return Result.Failure(CompanyErrors.NotFound(id));
@@ -65,40 +75,56 @@ public class CompanyService : ICompanyService
 
         _mapper.Map(companyDto, company);
 
-        await _unitOfWork.Companies.UpdateAsync(company, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Companies
+            .UpdateAsync(company, cancellationToken)
+            .ConfigureAwait(false);
+        
+        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return Result.Success();
     }
 
     public async Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var exists = await _unitOfWork.Companies.ExistsAsync(id, cancellationToken);
+        var exists = await _unitOfWork.Companies
+            .ExistsAsync(id, cancellationToken)
+            .ConfigureAwait(false);
         
         if (!exists)
             return Result.Failure(CompanyErrors.NotFound(id));
 
-        await _unitOfWork.Companies.DeleteAsync(id, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.Companies
+            .DeleteAsync(id, cancellationToken)
+            .ConfigureAwait(false);
+        
+        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return Result.Success();
     }
 
     public async Task<Result<CompanyBasicInfoDto>> GetBasicInfoAsync(Guid companyId, CancellationToken cancellationToken = default)
     {
-        var company = await _unitOfWork.Companies.GetByIdWithPlanAsync(companyId, cancellationToken);
+        var company = await _unitOfWork.Companies
+            .GetByIdWithPlanAsync(companyId, cancellationToken)
+            .ConfigureAwait(false);
         
         if (company == null)
             return Result<CompanyBasicInfoDto>.Failure(CompanyErrors.NotFound(companyId));
 
-        if (company.Status != 1)
+        if (company.Status != CompanyStatus.ACTIVE)
             return Result<CompanyBasicInfoDto>.Failure(
                 Error.Validation("Company.Inactive", "La empresa no está activa"));
 
-        var activeUsers = await _unitOfWork.Companies.CountActiveUsersByCompanyAsync(companyId, cancellationToken);
-        var activeProperties = await _unitOfWork.Companies.CountActivePropertiesByCompanyAsync(companyId, cancellationToken);
+        var activeUsers = await _unitOfWork.Companies
+            .CountActiveUsersByCompanyAsync(companyId, cancellationToken)
+            .ConfigureAwait(false);
+        
+        var activeProperties = await _unitOfWork.Companies
+            .CountActivePropertiesByCompanyAsync(companyId, cancellationToken)
+            .ConfigureAwait(false);
 
-        var planInfo = await GetPlanInfoCachedAsync(company.PlanType, cancellationToken);
+        var planInfo = await GetPlanInfoCachedAsync(company.PlanType, cancellationToken)
+            .ConfigureAwait(false);
 
         var basicInfo = new CompanyBasicInfoDto
         {
@@ -115,18 +141,18 @@ public class CompanyService : ICompanyService
         return Result<CompanyBasicInfoDto>.Success(basicInfo);
     }
 
-    private async Task<PlanInfoDto> GetPlanInfoCachedAsync(int planType, CancellationToken cancellationToken)
+    private Task<PlanInfoDto> GetPlanInfoCachedAsync(int planType, CancellationToken cancellationToken)
     {
-        var cacheKey = $"PlanInfo_{planType}";
+        var cacheKey = $"{CacheConstants.PLAN_INFO_CACHE_KEY_PREFIX}{planType}";
 
         if (!_cache.TryGetValue(cacheKey, out PlanInfoDto? planInfo))
         {
             var planName = planType switch
             {
-                1 => "Básico",
-                2 => "Estándar",
-                3 => "Premium",
-                _ => "Sin Plan"
+                PlanType.BASIC => PlanNames.BASIC,
+                PlanType.STANDARD => PlanNames.STANDARD,
+                PlanType.PREMIUM => PlanNames.PREMIUM,
+                _ => PlanNames.NO_PLAN
             };
 
             planInfo = new PlanInfoDto
@@ -136,11 +162,11 @@ public class CompanyService : ICompanyService
             };
 
             var cacheOptions = new MemoryCacheEntryOptions()
-                .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheExpirationMinutes));
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(CacheConstants.CACHE_EXPIRATION_MINUTES));
 
             _cache.Set(cacheKey, planInfo, cacheOptions);
         }
 
-        return planInfo!;
+        return Task.FromResult(planInfo!);
     }
 }

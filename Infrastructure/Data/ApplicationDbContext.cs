@@ -49,11 +49,15 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Code).HasMaxLength(100).HasColumnName("Code");
             entity.Property(e => e.Address).HasMaxLength(500).IsRequired().HasColumnName("Address");
             entity.Property(e => e.City).IsRequired().HasColumnName("City");
+            entity.Property(e => e.Country).HasMaxLength(100).HasColumnName("Country");
             entity.Property(e => e.Neighborhood).IsRequired().HasColumnName("Neighborhood");
             entity.Property(e => e.IsRented).HasColumnName("IsRented");
             entity.Property(e => e.BuiltArea).HasColumnType("numeric").HasColumnName("BuiltArea");
             entity.Property(e => e.LotArea).HasColumnType("numeric").HasColumnName("LotArea");
             entity.Property(e => e.Levels).HasColumnName("Levels");
+            entity.Property(e => e.Detail).HasColumnName("Detail");
+            entity.Property(e => e.Latitude).HasColumnType("numeric(10,7)").HasColumnName("Latitude");
+            entity.Property(e => e.Longitude).HasColumnType("numeric(10,7)").HasColumnName("Longitude");
             entity.Property(e => e.PropertyTypeId).HasColumnName("PropertyTypeId");
             entity.Property(e => e.CompanyId).HasColumnName("CompanyId");
             entity.Property(e => e.IsActive).HasColumnName("IsActive");

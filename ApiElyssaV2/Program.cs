@@ -1,8 +1,12 @@
-﻿using Elyssa.Core.Interfaces;
+﻿using Asp.Versioning;
+using Elyssa.Core.Interfaces;
 using Elyssa.Core.Services;
+using Elyssa.Core.Validators;
 using Elyssa.Infrastructure.Data;
 using Elyssa.Infrastructure.Repositories;
 using Elyssa.PublicApi.Middleware;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Reflection;
@@ -24,19 +28,41 @@ try
 
     builder.Host.UseSerilog();
 
+    builder.Services.AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new ApiVersion(1, 0);
+        options.AssumeDefaultVersionWhenUnspecified = true;
+        options.ReportApiVersions = true;
+        options.ApiVersionReader = ApiVersionReader.Combine(
+            new UrlSegmentApiVersionReader(),
+            new HeaderApiVersionReader("X-Api-Version"),
+            new QueryStringApiVersionReader("api-version")
+        );
+    }).AddApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
+    });
+
     builder.Services.AddControllers();
+    
+    builder.Services.AddFluentValidationAutoValidation()
+        .AddFluentValidationClientsideAdapters();
+    
+    builder.Services.AddValidatorsFromAssemblyContaining<CompanyDtoValidator>();
+
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>
     {
         c.SwaggerDoc("v1", new()
         {
             Title = "Elyssa API",
-            Version = "v1",
-            Description = "API BackOffice Elyssa - Clean Architecture con Result Pattern",
+            Version = "v2",
+            Description = "API BackOffice Elyssa",
             Contact = new()
             {
                 Name = "Equipo Elyssa",
-                Email = "soporte@elyssa.com"
+                Email = "oswaldo@elyssa.app"
             }
         });
 

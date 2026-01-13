@@ -8,13 +8,15 @@ public class CompanyMappingProfile : Profile
 {
     public CompanyMappingProfile()
     {
-        // Company -> CompanyDto
         CreateMap<Company, CompanyDto>();
 
-        // CompanyDto -> Company
         CreateMap<CompanyDto, Company>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.BusinessName, opt => opt.Ignore())
+            .ForMember(dest => dest.Nit, opt => opt.Ignore())
+            .ForMember(dest => dest.Status, opt => opt.Ignore())
+            .ForMember(dest => dest.PlanType, opt => opt.Ignore());
     }
 }

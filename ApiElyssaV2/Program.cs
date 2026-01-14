@@ -93,11 +93,15 @@ try
 
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowAll", policy =>
+        options.AddPolicy("AllowSpecificOrigins", policy =>
         {
-            policy.AllowAnyOrigin()
+            var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
+                ?? new[] { "http://localhost:3000", "http://localhost:4200" };
+            
+            policy.WithOrigins(allowedOrigins)
                   .AllowAnyMethod()
-                  .AllowAnyHeader();
+                  .AllowAnyHeader()
+                  .AllowCredentials();
         });
     });
 
@@ -120,7 +124,7 @@ try
 
     app.UseHttpsRedirection();
 
-    app.UseCors("AllowAll");
+    app.UseCors("AllowSpecificOrigins");
 
     app.UseAuthorization();
 

@@ -18,12 +18,18 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
     public async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.FindAsync(new object[] { id }, cancellationToken).ConfigureAwait(false);
+        return await _dbSet
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Id == id, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbSet.ToListAsync(cancellationToken).ConfigureAwait(false);
+        return await _dbSet
+            .AsNoTracking()
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
@@ -42,7 +48,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var entity = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+        var entity = await _dbSet.FindAsync(new object[] { id }, cancellationToken).ConfigureAwait(false);
         if (entity != null)
         {
             _dbSet.Remove(entity);
@@ -51,6 +57,9 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.AnyAsync(e => e.Id == id, cancellationToken).ConfigureAwait(false);
+        return await _dbSet
+            .AsNoTracking()
+            .AnyAsync(e => e.Id == id, cancellationToken)
+            .ConfigureAwait(false);
     }
 }

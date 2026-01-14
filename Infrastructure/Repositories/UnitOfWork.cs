@@ -1,4 +1,3 @@
-using Elyssa.Core.Domain.Entities;
 using Elyssa.Core.Interfaces;
 using Elyssa.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore.Storage;

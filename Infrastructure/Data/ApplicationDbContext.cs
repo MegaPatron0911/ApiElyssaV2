@@ -14,6 +14,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<Property> Properties { get; set; }
     public DbSet<PropertyType> PropertyTypes { get; set; }
     public DbSet<Inventory> Inventories { get; set; }
+    public DbSet<EstateAgent> EstateAgents { get; set; }
+    public DbSet<EstateAgentInCompany> EstateAgentInCompanies { get; set; }
+    public DbSet<PropertyEnvironment> PropertyEnvironments { get; set; }
+    public DbSet<EnvironmentDiagnostic> EnvironmentDiagnostics { get; set; }
+    public DbSet<ItemDiagnostic> ItemDiagnostics { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -113,6 +118,107 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(e => e.Property)
                 .WithMany()
                 .HasForeignKey(e => e.PropertyId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EstateAgent>(entity =>
+        {
+            entity.ToTable("EstateAgent");
+            
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("EstateAgentId");
+            
+            entity.Property(e => e.FirstName).HasMaxLength(100).IsRequired().HasColumnName("FirstName");
+            entity.Property(e => e.LastName).HasMaxLength(100).IsRequired().HasColumnName("LastName");
+            entity.Property(e => e.Email).HasMaxLength(100).IsRequired().HasColumnName("Email");
+            entity.Property(e => e.Phone).HasMaxLength(20).HasColumnName("Phone");
+            entity.Property(e => e.IsActive).HasColumnName("IsActive");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreationDate");
+            entity.Ignore(e => e.UpdatedAt);
+        });
+
+        modelBuilder.Entity<EstateAgentInCompany>(entity =>
+        {
+            entity.ToTable("EstateAgentInCompany");
+            
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("EstateAgentInCompanyId");
+            
+            entity.Property(e => e.EstateAgentId).HasColumnName("EstateAgentId");
+            entity.Property(e => e.CompanyId).HasColumnName("CompanyId");
+            entity.Property(e => e.IsActive).HasColumnName("IsActive");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreationDate");
+            entity.Ignore(e => e.UpdatedAt);
+
+            entity.HasOne(e => e.EstateAgent)
+                .WithMany(ea => ea.CompanyAssociations)
+                .HasForeignKey(e => e.EstateAgentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Company)
+                .WithMany()
+                .HasForeignKey(e => e.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PropertyEnvironment>(entity =>
+        {
+            entity.ToTable("Environment");
+            
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("EnvironmentId");
+            
+            entity.Property(e => e.PropertyId).HasColumnName("PropertyId");
+            entity.Property(e => e.Name).HasMaxLength(200).IsRequired().HasColumnName("Name");
+            entity.Property(e => e.Description).HasColumnName("Description");
+            entity.Property(e => e.IsActive).HasColumnName("IsActive");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreationDate");
+            entity.Ignore(e => e.UpdatedAt);
+
+            entity.HasOne(e => e.Property)
+                .WithMany()
+                .HasForeignKey(e => e.PropertyId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EnvironmentDiagnostic>(entity =>
+        {
+            entity.ToTable("EnvironmentDiagnostics");
+            
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("EnvironmentDiagnosticId");
+            
+            entity.Property(e => e.InventoryId).HasColumnName("InventoryId");
+            entity.Property(e => e.Observations).HasColumnName("Observations");
+            entity.Property(e => e.State).HasMaxLength(50).HasColumnName("State");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreationDate");
+            entity.Ignore(e => e.UpdatedAt);
+            entity.Ignore(e => e.EnvironmentDiagnosticId);
+
+            entity.HasOne(e => e.Inventory)
+                .WithMany()
+                .HasForeignKey(e => e.InventoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ItemDiagnostic>(entity =>
+        {
+            entity.ToTable("ItemDiagnostic");
+            
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("ItemDiagnosticId");
+            
+            entity.Property(e => e.EnvironmentDiagnosticId).HasColumnName("EnvironmentDiagnosticId");
+            entity.Property(e => e.ItemName).HasMaxLength(200).IsRequired().HasColumnName("ItemName");
+            entity.Property(e => e.State).HasMaxLength(50).HasColumnName("State");
+            entity.Property(e => e.Quantity).HasColumnName("Quantity");
+            entity.Property(e => e.Observations).HasColumnName("Observations");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreationDate");
+            entity.Ignore(e => e.UpdatedAt);
+
+            entity.HasOne(e => e.EnvironmentDiagnostic)
+                .WithMany(ed => ed.ItemDiagnostics)
+                .HasForeignKey(e => e.EnvironmentDiagnosticId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

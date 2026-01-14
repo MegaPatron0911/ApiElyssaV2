@@ -22,100 +22,60 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
         string sortOrder,
         CancellationToken cancellationToken = default)
     {
-        try
+        var query = _dbSet.AsNoTracking()
+            .Where(p => p.CompanyId == companyId && p.IsActive);
+
+        if (!string.IsNullOrWhiteSpace(code))
         {
-            var query = _dbSet.AsNoTracking()
-                .Where(p => p.CompanyId == companyId && p.IsActive);
-
-            if (!string.IsNullOrWhiteSpace(code))
-            {
-                query = query.Where(p => EF.Functions.ILike(p.Code, $"%{code}%"));
-            }
-
-            if (!string.IsNullOrWhiteSpace(address))
-            {
-                query = query.Where(p => EF.Functions.ILike(p.Address, $"%{address}%"));
-            }
-
-            if (!string.IsNullOrWhiteSpace(city))
-            {
-                query = query.Where(p => EF.Functions.ILike(p.City, $"%{city}%"));
-            }
-
-            var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
-
-            query = sortBy.ToLowerInvariant() switch
-            {
-                "code" => sortOrder == "asc"
-                    ? query.OrderBy(p => p.Code)
-                    : query.OrderByDescending(p => p.Code),
-                "address" => sortOrder == "asc"
-                    ? query.OrderBy(p => p.Address)
-                    : query.OrderByDescending(p => p.Address),
-                "city" => sortOrder == "asc"
-                    ? query.OrderBy(p => p.City)
-                    : query.OrderByDescending(p => p.City),
-                _ => sortOrder == "asc"
-                    ? query.OrderBy(p => p.CreatedAt)
-                    : query.OrderByDescending(p => p.CreatedAt)
-            };
-
-            var properties = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            if (properties.Any())
-            {
-                var typeIds = properties.Select(p => p.PropertyTypeId).Distinct().ToList();
-                
-                var propertyTypesQuery = from pt in _context.Set<PropertyType>().AsNoTracking()
-                                        where typeIds.Contains(pt.Id)
-                                        select new PropertyType 
-                                        { 
-                                            Id = pt.Id, 
-                                            Name = pt.Name,
-                                            CreatedAt = DateTime.MinValue,
-                                            UpdatedAt = null,
-                                            Properties = new List<Property>()
-                                        };
-
-                var propertyTypes = await propertyTypesQuery
-                    .ToDictionaryAsync(pt => pt.Id, cancellationToken)
-                    .ConfigureAwait(false);
-
-                foreach (var property in properties)
-                {
-                    if (propertyTypes.TryGetValue(property.PropertyTypeId, out var propertyType))
-                    {
-                        property.PropertyType = propertyType;
-                    }
-                }
-            }
-
-            return (properties, totalCount);
+            query = query.Where(p => EF.Functions.ILike(p.Code, $"%{code}%"));
         }
-        catch (Exception ex)
+
+        if (!string.IsNullOrWhiteSpace(address))
         {
-            throw new Exception($"Error in GetPagedAsync: {ex.Message} | InnerException: {ex.InnerException?.Message}", ex);
+            query = query.Where(p => EF.Functions.ILike(p.Address, $"%{address}%"));
         }
+
+        if (!string.IsNullOrWhiteSpace(city))
+        {
+            query = query.Where(p => EF.Functions.ILike(p.City, $"%{city}%"));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+
+        query = sortBy.ToLowerInvariant() switch
+        {
+            "code" => sortOrder == "asc"
+                ? query.OrderBy(p => p.Code)
+                : query.OrderByDescending(p => p.Code),
+            "address" => sortOrder == "asc"
+                ? query.OrderBy(p => p.Address)
+                : query.OrderByDescending(p => p.Address),
+            "city" => sortOrder == "asc"
+                ? query.OrderBy(p => p.City)
+                : query.OrderByDescending(p => p.City),
+            _ => sortOrder == "asc"
+                ? query.OrderBy(p => p.CreatedAt)
+                : query.OrderByDescending(p => p.CreatedAt)
+        };
+
+        var properties = await query
+            .Include(p => p.PropertyType)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return (properties, totalCount);
     }
 
     public async Task<bool> HasInventoriesAsync(Guid propertyId, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var count = await _context.Database
-                .SqlQueryRaw<int>(@"SELECT COUNT(*) as ""Value"" FROM ""Inventory"" WHERE ""PropertyId"" = {0} AND ""IsActive"" = true", propertyId)
-                .FirstOrDefaultAsync(cancellationToken)
-                .ConfigureAwait(false);
-            return count > 0;
-        }
-        catch
-        {
-            return false;
-        }
+        var count = await _context.Set<Inventory>()
+            .Where(i => i.PropertyId == propertyId && i.IsActive)
+            .CountAsync(cancellationToken)
+            .ConfigureAwait(false);
+        
+        return count > 0;
     }
 
     public async Task<Dictionary<Guid, bool>> GetInventoriesExistenceAsync(
@@ -128,29 +88,17 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
             return new Dictionary<Guid, bool>();
         }
 
-        try
-        {
-            var propertyIdsArray = string.Join(",", propertyIdsList.Select(id => $"'{id}'"));
-            var sql = $@"
-                SELECT DISTINCT ""PropertyId"" 
-                FROM ""Inventory"" 
-                WHERE ""PropertyId"" IN ({propertyIdsArray})
-                AND ""IsActive"" = true";
+        var propertiesWithInventories = await _context.Set<Inventory>()
+            .Where(i => propertyIdsList.Contains(i.PropertyId) && i.IsActive)
+            .Select(i => i.PropertyId)
+            .Distinct()
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
 
-            var propertiesWithInventories = await _context.Database
-                .SqlQueryRaw<Guid>(sql)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            return propertyIdsList.ToDictionary(
-                id => id,
-                id => propertiesWithInventories.Contains(id)
-            );
-        }
-        catch
-        {
-            return propertyIdsList.ToDictionary(id => id, id => false);
-        }
+        return propertyIdsList.ToDictionary(
+            id => id,
+            id => propertiesWithInventories.Contains(id)
+        );
     }
 
     public async Task<Property?> GetDetailByIdAsync(
@@ -184,41 +132,19 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
         Guid propertyId, 
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var sql = @"SELECT COUNT(*)::integer AS ""Value"" 
-                        FROM ""Environment"" 
-                        WHERE ""PropertyId"" = {0} AND ""IsActive"" = true";
-            
-            return await _context.Database
-                .SqlQueryRaw<int>(sql, propertyId)
-                .FirstOrDefaultAsync(cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch
-        {
-            return 0;
-        }
+        return await _context.Set<PropertyEnvironment>()
+            .Where(e => e.PropertyId == propertyId && e.IsActive)
+            .CountAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public async Task<int> CountInventoriesByPropertyAsync(
         Guid propertyId, 
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var sql = @"SELECT COUNT(*)::integer AS ""Value"" 
-                        FROM ""Inventory"" 
-                        WHERE ""PropertyId"" = {0} AND ""IsActive"" = true";
-            
-            return await _context.Database
-                .SqlQueryRaw<int>(sql, propertyId)
-                .FirstOrDefaultAsync(cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch
-        {
-            return 0;
-        }
+        return await _context.Set<Inventory>()
+            .Where(i => i.PropertyId == propertyId && i.IsActive)
+            .CountAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 }

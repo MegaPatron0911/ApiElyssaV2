@@ -65,10 +65,10 @@ public class InventoryService : IInventoryService
                 var inventoryTypeName = inventory.InventoryType switch
                 {
                     InventoryType.Captacion => InventoryTypeNames.Captacion,
-                    InventoryType.Colocación => InventoryTypeNames.Colocacion,
+                    InventoryType.Colocacion => InventoryTypeNames.Colocacion,
                     InventoryType.PreVisita => InventoryTypeNames.PreVisita,
-                    InventoryType.Desocupación => InventoryTypeNames.Desocupación,
-                    _ => "Desconocido"
+                    InventoryType.Desocupacion => InventoryTypeNames.Desocupacion,
+                    _ => "Unknown"
                 };
 
                 string? pdfDownloadUrl = null;
@@ -170,10 +170,10 @@ public class InventoryService : IInventoryService
             var inventoryTypeName = inventory.InventoryType switch
             {
                 InventoryType.Captacion => InventoryTypeNames.Captacion,
-                InventoryType.Colocación => InventoryTypeNames.Colocacion,
+                InventoryType.Colocacion => InventoryTypeNames.Colocacion,
                 InventoryType.PreVisita => InventoryTypeNames.PreVisita,
-                InventoryType.Desocupación => InventoryTypeNames.Desocupación,
-                _ => "Desconocido"
+                InventoryType.Desocupacion => InventoryTypeNames.Desocupacion,
+                _ => "Unknown"
             };
 
             var response = new InventoryDetailResponse

@@ -2,6 +2,7 @@ using Elyssa.Core.Domain.Entities;
 using Elyssa.Core.Interfaces;
 using Elyssa.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using EnvironmentEntity = Elyssa.Core.Domain.Entities.Environment;
 
 namespace Elyssa.Infrastructure.Repositories;
 
@@ -60,6 +61,7 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
 
         var properties = await query
             .Include(p => p.PropertyType)
+            .Include(p => p.EstateAgent)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken)
@@ -123,6 +125,7 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
         return await _dbSet
             .AsNoTracking()
             .Include(p => p.PropertyType)
+            .Include(p => p.EstateAgent)
             .Where(p => p.Id == propertyId && p.IsActive)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -132,7 +135,7 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
         Guid propertyId, 
         CancellationToken cancellationToken = default)
     {
-        return await _context.Set<PropertyEnvironment>()
+        return await _context.Set<EnvironmentEntity>()
             .Where(e => e.PropertyId == propertyId && e.IsActive)
             .CountAsync(cancellationToken)
             .ConfigureAwait(false);

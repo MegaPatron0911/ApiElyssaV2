@@ -8,10 +8,10 @@ public static class ErrorExtensions
 {
     public static IActionResult ToApiErrorResponse(this Error error)
     {
-        var response = new ApiErrorResponse
+        var response = new ApiErrorResponseDto
         {
             Success = false,
-            Error = new ErrorDetail
+            Error = new ErrorDetailDto
             {
                 Code = error.Code,
                 Message = error.Message,

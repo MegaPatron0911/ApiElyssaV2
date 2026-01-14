@@ -30,7 +30,7 @@ public class InventoryService : IInventoryService
         _logger = logger;
     }
 
-    public async Task<Result<InventoryListResponse>> GetPagedInventoriesAsync(
+    public async Task<Result<InventoryListResponseDto>> GetPagedInventoriesAsync(
         Guid companyId,
         InventoryFilterDto filter,
         CancellationToken cancellationToken = default)
@@ -40,7 +40,7 @@ public class InventoryService : IInventoryService
         var validationResult = ValidateFilter(filter);
         if (!validationResult.IsSuccess)
         {
-            return Result<InventoryListResponse>.Failure(validationResult.Error!);
+            return Result<InventoryListResponseDto>.Failure(validationResult.Error!);
         }
 
         var pageSize = Math.Min(filter.PageSize, InventoryConstants.MAX_PAGE_SIZE);
@@ -72,12 +72,12 @@ public class InventoryService : IInventoryService
                 };
 
                 string? pdfDownloadUrl = null;
-                if (inventory.IsSigned && !string.IsNullOrWhiteSpace(inventory.PdfUrl))
+                if (inventory.IsSigned && !string.IsNullOrWhiteSpace(inventory.PfdUrl))
                 {
-                    pdfDownloadUrl = inventory.PdfUrl;
+                    pdfDownloadUrl = inventory.PfdUrl;
                 }
 
-                return new InventoryResponse
+                return new InventoryResponseDto
                 {
                     InventoryId = inventory.Id,
                     Property = new InventoryPropertyInfoDto
@@ -104,10 +104,10 @@ public class InventoryService : IInventoryService
             var hasPreviousPage = page > InventoryConstants.MIN_PAGE_NUMBER;
             var remainingRecords = totalCount - (page * pageSize);
 
-            var response = new InventoryListResponse
+            var response = new InventoryListResponseDto
             {
                 Inventories = inventoryList,
-                Pagination = new PageInfo
+                Pagination = new PageInfoDto
                 {
                     CurrentPage = page,
                     PageSize = pageSize,
@@ -123,7 +123,7 @@ public class InventoryService : IInventoryService
             _logger.LogDebug("Retrieved {Count} inventories, page {Page}/{TotalPages}",
                 inventoryList.Count, page, totalPages);
 
-            return Result<InventoryListResponse>.Success(response);
+            return Result<InventoryListResponseDto>.Success(response);
         }
         catch (Exception ex)
         {
@@ -132,7 +132,7 @@ public class InventoryService : IInventoryService
         }
     }
 
-    public async Task<Result<InventoryDetailResponse>> GetDetailAsync(
+    public async Task<Result<InventoryDetailResponseDto>> GetDetailAsync(
         Guid inventoryId,
         Guid companyId,
         CancellationToken cancellationToken = default)
@@ -149,14 +149,14 @@ public class InventoryService : IInventoryService
             if (inventory == null)
             {
                 _logger.LogWarning("Inventory {InventoryId} not found", inventoryId);
-                return Result<InventoryDetailResponse>.Failure(InventoryErrors.NotFound(inventoryId));
+                return Result<InventoryDetailResponseDto>.Failure(InventoryErrors.NotFound(inventoryId));
             }
 
             if (inventory.Property == null || inventory.Property.CompanyId != companyId)
             {
                 _logger.LogWarning("Inventory {InventoryId} does not belong to a property of company {CompanyId}", 
                     inventoryId, companyId);
-                return Result<InventoryDetailResponse>.Failure(InventoryErrors.ForbiddenResource(inventoryId, companyId));
+                return Result<InventoryDetailResponseDto>.Failure(InventoryErrors.ForbiddenResource(inventoryId, companyId));
             }
 
             var totalEnvironments = await _unitOfWork.Inventories
@@ -176,7 +176,7 @@ public class InventoryService : IInventoryService
                 _ => "Unknown"
             };
 
-            var response = new InventoryDetailResponse
+            var response = new InventoryDetailResponseDto
             {
                 InventoryId = inventory.Id,
                 Property = new InventoryPropertyDto
@@ -200,7 +200,7 @@ public class InventoryService : IInventoryService
                     OwnerSignatureDate = inventory.OwnerSignatureDate,
                     SignatureDate = inventory.SignatureDate
                 },
-                PdfDownloadUrl = inventory.PdfUrl,
+                PdfDownloadUrl = inventory.PfdUrl,
                 Stats = new InventoryStatsDto
                 {
                     TotalEnvironments = totalEnvironments,
@@ -210,7 +210,7 @@ public class InventoryService : IInventoryService
             };
 
             _logger.LogDebug("Inventory detail retrieved successfully for {InventoryId}", inventoryId);
-            return Result<InventoryDetailResponse>.Success(response);
+            return Result<InventoryDetailResponseDto>.Success(response);
         }
         catch (Exception ex)
         {

@@ -28,10 +28,10 @@ public class PropertiesController : ControllerBase
     /// Obtiene un listado paginado de propiedades con opciones de filtrado y ordenamiento
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<PropertyListResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponseDto<PropertyListResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetProperties(
         [FromHeader(Name = "x-company-id")] Guid companyId,
@@ -63,7 +63,7 @@ public class PropertiesController : ControllerBase
             cancellationToken);
 
         return result.Match<IActionResult>(
-            success => Ok(new ApiResponse<PropertyListResponse>
+            success => Ok(new ApiResponseDto<PropertyListResponseDto>
             {
                 Success = true,
                 Data = success,
@@ -76,10 +76,10 @@ public class PropertiesController : ControllerBase
     /// Obtiene la información detallada de una propiedad específica
     /// </summary>
     [HttpGet("details")]
-    [ProducesResponseType(typeof(ApiResponse<PropertyDetailResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponseDto<PropertyDetailResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetPropertyDetail(
         [FromHeader(Name = "x-company-id")] Guid companyId,
@@ -95,7 +95,7 @@ public class PropertiesController : ControllerBase
             cancellationToken);
 
         return result.Match<IActionResult>(
-            success => Ok(new ApiResponse<PropertyDetailResponse>
+            success => Ok(new ApiResponseDto<PropertyDetailResponseDto>
             {
                 Success = true,
                 Data = success,

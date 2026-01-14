@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace Elyssa.Core.Validators;
 
-public class InventoryDetailRequestValidator : AbstractValidator<InventoryDetailRequest>
+public class InventoryDetailRequestValidator : AbstractValidator<InventoryDetailRequestDto>
 {
     public InventoryDetailRequestValidator()
     {

@@ -1,110 +1,69 @@
 # AGENTS.md
 
-Guía para colaborar en `refactoring-elyssa` con buenas prácticas, foco en calidad y sin sorpresas.
+Guía esencial para el desarrollo y colaboración en la API Elyssa V2. Este documento define las normas, arquitectura y flujos de trabajo estrictos para mantener la calidad y coherencia del proyecto.
 
-## Contexto técnico
+## 1. Contexto del Proyecto
 
-- Solución .NET:
-  - API BackOffice ASP.NET Core 6 (`BackOfficeElyssa/`)
-  - Librería de dominio (`Core/`)
-  - Infraestructura EF Core PostgreSQL (`Infraestructure/`)
-  - Cliente Nuwwe (`NuwweService/`)
-  - Azure Functions .NET 8 (`ProcessPropertyFunction/`, `UpdatePropertyFunction/`, `NuwweTokenRefresher/`)
-- SDKs:
-  - .NET 6 para API / librerías / tests
-  - .NET 8 para Functions v4
-- Principales librerías: AutoMapper, Ardalis.Specification, EF Core Npgsql, Serilog, Durable Functions.
-- Config sensible: `appsettings*.json` y `local.settings.json` contienen claves de BD, SendGrid, Google Geocoding y Nuwwe. **No versionar valores reales.**
+El proyecto es una solución **ASP.NET Core** que implementa una arquitectura limpia (Clean Architecture).
 
-## Flujo de trabajo
+- **Solución Principal**: `ApiElyssaV2.sln`
+- **Versión .NET**: .NET 10 (Target Framework `net10.0`)
+- **Estructura de Directorios**:
+  - `ApiElyssaV2/` (Interfaz Web API): Controladores, Middlewares, Filtros y Configuración de inicio.
+  - `Core/` (Núcleo): Entidades de Dominio, Interfaces, DTOs, Validaciones, Servicios de Dominio y Especificaciones. **Sin dependencias externas.**
+  - `Infrastructure/` (Infraestructura): Implementación de repositorios, EF Core, y adaptadores para servicios externos.
+  - `Tests/`: Pruebas unitarias e integración. `Core.Tests`, `Infrastructure.Tests`, `Integration.Tests`.
 
-- Build inicial:
-  - `dotnet restore`
-  - `dotnet build BackOfficeElyssa.sln`
-- Pruebas locales:
-  - `dotnet test BackOfficeElyssa.sln`
-  - Añade / actualiza tests al modificar lógica de dominio o servicios.
-- Estilo C#:
-  - PascalCase para públicos, camelCase para privados.
-  - Respeta nullability, DI y patrones de especificación/repositorio existentes.
-- API y contratos:
-  - Si cambias contratos, actualiza DTOs, perfiles AutoMapper y swagger (en `Program.cs`).
-- Azure Functions:
-  - Prueba triggers HTTP/locales con `func start` cuando aplique.
-- Datos y migraciones:
-  - EF Core apunta a PostgreSQL.
-  - No ejecutar migraciones contra producción desde local.
-  - No dejar cadenas de conexión ni claves en el código.
+## 2. Tecnologías y Librerías Clave
 
-## Buenas prácticas de código
+- **ORM**: Entity Framework Core (con PostgreSQL npgsql).
+- **Mapeo**: AutoMapper (ver `Core/Mappings`).
+- **Validación**: FluentValidation (ver `Core/Validators`).
+- **Patrones**: Repository Pattern, Specification Pattern (Ardalis.Specification), Dependency Injection.
+- **Logging**: Serilog.
+- **Documentación API**: Swagger/OpenAPI.
 
-- Arquitectura:
-  - Controllers finos: validación + orquestación.
-  - Lógica de negocio en servicios / dominio (`Core/`).
-  - Infraestructura (repos, EF, Nuwwe, etc.) desacoplada de dominio.
-- SOLID y Clean Code:
-  - Single Responsibility: métodos y clases con una responsabilidad clara.
-  - Dependency Inversion: programar contra interfaces en `Core/Interfaces`.
-  - Métodos cortos, nombres descriptivos, sin “magia”.
-  - DRY: extraer lógica repetida a servicios / helpers / extensiones.
-- Async/await:
-  - Preferir APIs async, evitar `.Result` / `.Wait()`.
-  - Usar `CancellationToken` cuando esté disponible.
-- Validación y errores:
-  - Validar entradas en controladores y servicios.
-  - Respuestas HTTP correctas para casos felices y de error.
-  - Para datos externos (Nuwwe), manejar fallos transitorios con reintentos controlados.
-- Logging:
-  - Usar `ILogger` / Serilog.
-  - Mensajes claros, sin PII ni secretos.
-  - Mantener coherencia con la telemetría existente (Application Insights).
+## 3. Flujo de Trabajo
 
-## Testing (obligatorio)
+### Compilación y Ejecución
+- **Restaurar paquetes**: `dotnet restore`
+- **Compilar solución**: `dotnet build ApiElyssaV2.sln`
+- **Ejecutar API**: `dotnet run --project ApiElyssaV2/ApiElyssaV2/Elyssa.PublicApi.csproj` (o desde Visual Studio/IDE).
 
-- Ubicación:
-  - Tests de dominio: `Tests/Core.Tests`
-  - Tests de infraestructura: `Tests/Infraestructure.Tests`
-- Enfoque:
-  - Unit tests para lógica de dominio y servicios (xUnit + Moq).
-  - Tests de integración para endpoints (WebApplicationFactory) cuando tenga sentido.
-  - Cubre casos felices, de error y bordes relevantes.
-- Comando estándar:
-  - `dotnet test BackOfficeElyssa.sln`
-- Regla:
-  - No dar una tarea por terminada si hay tests fallando.
+### Pruebas (Obligatorio)
+No se acepta código sin pruebas verdes.
+- **Ejecutar todos los tests**: `dotnet test ApiElyssaV2.sln`
+- **Cobertura requerida**:
+  - Lógica de negocio en `Core`: Unit Tests.
+  - Repositorios/Integraciones en `Infrastructure`: Integration/Unit Tests.
 
-## Convenciones específicas
+## 4. Guías de Estilo y Arquitectura
 
-- AutoMapper:
-  - Al añadir entidades / DTOs, actualizar perfiles en `Core/Mappings`.
-- Especificaciones / repos:
-  - Para consultas complejas, crear especificaciones Ardalis en lugar de lógica ad-hoc.
-  - Mantener coherencia en repos genéricos y patrones de consulta.
-- Azure Functions:
-  - Bindings y settings en `local.settings.json` de cada Function.
-  - Mantener configuración para .NET 8 Functions v4 (por ejemplo, flags necesarios en config).
-- Controladores:
-  - Rutas REST claras.
-  - Validan modelos y delegan a servicios (`Core/Services`).
-  - No mezclar lógica de negocio en controladores.
+### Clean Architecture
+1.  **Dependencias**: `Core` no debe depender de nadie. `Infrastructure` y `ApiElyssaV2` dependen de `Core`.
+2.  **Lógica de Negocio**: Debe residir EXCLUSIVAMENTE en `Core` (Servicios o Entidades), nunca en los Controladores.
+3.  **Controladores**: Deben ser "finos" (Thin Controllers). Su única responsabilidad es recibir peticiones, validar (delegando), llamar a servicios/mediadores y devolver una respuesta HTTP adecuada.
 
-## Seguridad y datos
+### Convenciones de Código
+- **Naming**: `PascalCase` para clases y métodos públicos, `camelCase` para variables locales y campos privados.
+- **Async**: Todo I/O (Base de datos, HTTP calls) debe ser asíncrono (`async/await`) usando `CancellationToken`.
+- **Inyección de Dependencias**: Usar interfaces para inyectar servicios. No instanciar clases concretas de infraestructura en la lógica de negocio.
 
-- Secrets:
-  - Nunca subir secretos, dumps de BD ni tokens.
-  - Usar `dotnet user-secrets` o variables de entorno para desarrollo local.
-- Config:
-  - Revisar usos de SendGrid, Google, Nuwwe y JWT.
-  - Claves solo a través de configuración segura (user-secrets, KeyVault, env vars).
-- Logs compartidos:
-  - Redactar PII, tokens y datos sensibles antes de compartir.
+### Manejo de Datos
+- **DTOs vs Entidades**: Nunca exponer Entidades de dominio directamente en la API. Usar DTOs definidos en `Core/DTOs`.
+- **AutoMapper**: Usar perfiles de mapeo para transformar Entidades <-> DTOs. Actualizar `Core/Mappings` al crear nuevos modelos.
+- **Secretos**: **PROHIBIDO** commitear claves, tokens o cadenas de conexión reales. Usar `User Secrets` en desarrollo y variables de entorno en producción.
 
-## Checklist antes de finalizar
+## 5. Checklist para Agentes
 
-Antes de considerar una tarea como “lista”:
+Antes de dar una tarea por finalizada, verifica:
 
-- `dotnet build BackOfficeElyssa.sln` sin errores relevantes.
-- `dotnet test BackOfficeElyssa.sln` pasa todos los tests relevantes.
-- No se han introducido secretos ni cadenas sensibles en commits.
-- Mapeos AutoMapper, contratos públicos y migraciones de BD siguen siendo coherentes.
-- Si el cambio afecta a integraciones externas, se ha probado al menos el flujo principal en local.
+1.  [ ] La solución compila sin errores (`dotnet build ApiElyssaV2.sln`).
+2.  [ ] Las nuevas funcionalidades tienen pruebas unitarias o de integración y TODAS pasan (`dotnet test`).
+3.  [ ] Se han respetado las capas de arquitectura (no hay lógica de DB en controladores, etc.).
+4.  [ ] No se han introducido "Magic Strings" o secretos en el código fuente.
+5.  [ ] Si se cambió el modelo de datos, se han actualizado los DTOs y Mappings correspondientes.
+6.  [ ] El código es limpio, formateado y sigue las convenciones de nombres de C#.
+
+---
+*Este documento es la fuente de verdad para el estilo y normas del proyecto. Síguelo estrictamente.*

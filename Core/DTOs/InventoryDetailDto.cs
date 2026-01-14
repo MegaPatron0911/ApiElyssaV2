@@ -1,11 +1,11 @@
 namespace Elyssa.Core.DTOs;
 
-public class InventoryDetailRequest
+public class InventoryDetailRequestDto
 {
     public Guid InventoryId { get; set; }
 }
 
-public class InventoryDetailResponse
+public class InventoryDetailResponseDto
 {
     public Guid InventoryId { get; set; }
     public InventoryPropertyDto Property { get; set; } = new();

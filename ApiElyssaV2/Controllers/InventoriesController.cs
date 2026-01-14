@@ -28,8 +28,8 @@ public class InventoriesController : ControllerBase
     /// Obtiene un listado paginado de inventarios con opciones de filtrado
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<InventoryListResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponseDto<InventoryListResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetInventories(
         [FromHeader(Name = "x-company-id")] Guid companyId,
@@ -44,7 +44,7 @@ public class InventoriesController : ControllerBase
             cancellationToken);
 
         return result.Match<IActionResult>(
-            success => Ok(new ApiResponse<InventoryListResponse>
+            success => Ok(new ApiResponseDto<InventoryListResponseDto>
             {
                 Success = true,
                 Data = success,
@@ -57,14 +57,14 @@ public class InventoriesController : ControllerBase
     /// Obtiene la información detallada de un inventario específico
     /// </summary>
     [HttpGet("details")]
-    [ProducesResponseType(typeof(ApiResponse<InventoryDetailResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponseDto<InventoryDetailResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetInventoryDetail(
         [FromHeader(Name = "x-company-id")] Guid companyId,
-        [FromQuery] InventoryDetailRequest request,
+        [FromQuery] InventoryDetailRequestDto request,
         CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Processing inventory detail request for inventory {InventoryId} and company {CompanyId}", 
@@ -76,7 +76,7 @@ public class InventoriesController : ControllerBase
             cancellationToken);
 
         return result.Match<IActionResult>(
-            success => Ok(new ApiResponse<InventoryDetailResponse>
+            success => Ok(new ApiResponseDto<InventoryDetailResponseDto>
             {
                 Success = true,
                 Data = success,

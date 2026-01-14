@@ -21,7 +21,10 @@ public class InventoryRepository : Repository<Inventory>, IInventoryRepository
         return await _dbSet
             .AsNoTracking()
             .Include(i => i.Property)
-            .ThenInclude(p => p.PropertyType)
+                .ThenInclude(p => p.PropertyType)
+            .Include(i => i.EstateAgent)
+            .Include(i => i.StakeHolderSignature)
+            .Include(i => i.OwnerSignature)
             .FirstOrDefaultAsync(i => i.Id == inventoryId && i.IsActive, cancellationToken)
             .ConfigureAwait(false);
     }
@@ -59,6 +62,7 @@ public class InventoryRepository : Repository<Inventory>, IInventoryRepository
         var query = _dbSet
             .AsNoTracking()
             .Include(i => i.Property)
+            .Include(i => i.EstateAgent)
             .Where(i => i.IsActive && i.Property!.CompanyId == companyId);
 
         if (inventoryType.HasValue)

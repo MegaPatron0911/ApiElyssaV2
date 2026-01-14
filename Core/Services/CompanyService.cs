@@ -46,7 +46,8 @@ public class CompanyService : ICompanyService
 
     public async Task<Result<CompanyDto>> CreateAsync(CompanyDto companyDto, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(companyDto.Name) || companyDto.Name.Length < 3)
+        // Validar que al menos TradeName o BusinessName estén presentes
+        if (string.IsNullOrWhiteSpace(companyDto.TradeName) && string.IsNullOrWhiteSpace(companyDto.BusinessName))
             return Result<CompanyDto>.Failure(CompanyErrors.NameTooShort);
 
         var company = _mapper.Map<Company>(companyDto);
@@ -70,7 +71,8 @@ public class CompanyService : ICompanyService
         if (company == null)
             return Result.Failure(CompanyErrors.NotFound(id));
 
-        if (string.IsNullOrWhiteSpace(companyDto.Name) || companyDto.Name.Length < 3)
+        // Validar que al menos TradeName o BusinessName estén presentes
+        if (string.IsNullOrWhiteSpace(companyDto.TradeName) && string.IsNullOrWhiteSpace(companyDto.BusinessName))
             return Result.Failure(CompanyErrors.NameTooShort);
 
         _mapper.Map(companyDto, company);
@@ -130,7 +132,7 @@ public class CompanyService : ICompanyService
         {
             CompanyId = company.Id,
             BusinessName = company.BusinessName,
-            Nit = company.Nit,
+            Nit = company.Tin,
             Email = company.Email,
             CreatedAt = company.CreatedAt,
             ActiveUsers = activeUsers,

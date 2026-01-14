@@ -1,6 +1,6 @@
 namespace Elyssa.Core.DTOs;
 
-public class PageInfo
+public class PageInfoDto
 {
     public int CurrentPage { get; set; }
     public int PageSize { get; set; }
@@ -12,8 +12,8 @@ public class PageInfo
     public int RemainingRecords { get; set; }
 }
 
-public class PropertyListResponse
+public class PropertyListResponseDto
 {
-    public List<PropertyResponse> Properties { get; set; } = new();
-    public PageInfo Pagination { get; set; } = new();
+    public List<PropertyResponseDto> Properties { get; set; } = new();
+    public PageInfoDto Pagination { get; set; } = new();
 }

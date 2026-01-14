@@ -8,14 +8,16 @@ public class PropertyMappingProfile : Profile
 {
     public PropertyMappingProfile()
     {
-        CreateMap<Property, PropertyResponse>()
+        CreateMap<Property, PropertyResponseDto>()
             .ForMember(dest => dest.PropertyId, opt => opt.MapFrom(src => src.Id))
             .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => src.UpdatedAt))
-            .ForMember(dest => dest.HasInventories, opt => opt.Ignore());
+            .ForMember(dest => dest.HasInventories, opt => opt.Ignore())
+            .ForMember(dest => dest.EstateAgentName, opt => opt.MapFrom(src => 
+                src.EstateAgent != null ? src.EstateAgent.EmployeeName : null));
 
-        CreateMap<PropertyType, PropertyTypeResponse>();
+        CreateMap<PropertyType, PropertyTypeResponseDto>();
 
-        CreateMap<Property, PropertyDetailResponse>()
+        CreateMap<Property, PropertyDetailResponseDto>()
             .ForMember(dest => dest.PropertyId, opt => opt.MapFrom(src => src.Id))
             .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => src.UpdatedAt))
             .ForMember(dest => dest.Location, opt => opt.MapFrom(src => new PropertyLocationDto
@@ -28,6 +30,8 @@ public class PropertyMappingProfile : Profile
                 Id = src.PropertyType!.Id,
                 Name = src.PropertyType.Name
             }))
+            .ForMember(dest => dest.EstateAgentName, opt => opt.MapFrom(src => 
+                src.EstateAgent != null ? src.EstateAgent.EmployeeName : null))
             .ForMember(dest => dest.Stats, opt => opt.Ignore());
     }
 }

@@ -31,7 +31,7 @@ public class PropertyService : IPropertyService
         _logger = logger;
     }
 
-    public async Task<Result<PropertyListResponse>> GetPagedPropertiesAsync(
+    public async Task<Result<PropertyListResponseDto>> GetPagedPropertiesAsync(
         Guid companyId,
         PropertyFilterDto filter,
         CancellationToken cancellationToken = default)
@@ -41,7 +41,7 @@ public class PropertyService : IPropertyService
         var validationResult = ValidateFilter(filter);
         if (!validationResult.IsSuccess)
         {
-            return Result<PropertyListResponse>.Failure(validationResult.Error!);
+            return Result<PropertyListResponseDto>.Failure(validationResult.Error!);
         }
 
         var pageSize = Math.Min(filter.PageSize, PropertyConstants.MAX_PAGE_SIZE);
@@ -62,7 +62,7 @@ public class PropertyService : IPropertyService
                     cancellationToken)
                 .ConfigureAwait(false);
 
-            var propertyList = _mapper.Map<List<PropertyResponse>>(properties);
+            var propertyList = _mapper.Map<List<PropertyResponseDto>>(properties);
 
             if (propertyList.Any())
             {
@@ -83,10 +83,10 @@ public class PropertyService : IPropertyService
             var hasPreviousPage = page > PropertyConstants.MIN_PAGE_NUMBER;
             var remainingRecords = totalCount - (page * pageSize);
 
-            var response = new PropertyListResponse
+            var response = new PropertyListResponseDto
             {
                 Properties = propertyList,
-                Pagination = new PageInfo
+                Pagination = new PageInfoDto
                 {
                     CurrentPage = page,
                     PageSize = pageSize,
@@ -102,7 +102,7 @@ public class PropertyService : IPropertyService
             _logger.LogDebug("Retrieved {Count} properties, page {Page}/{TotalPages}",
                 propertyList.Count, page, totalPages);
 
-            return Result<PropertyListResponse>.Success(response);
+            return Result<PropertyListResponseDto>.Success(response);
         }
         catch (Exception ex)
         {
@@ -111,7 +111,7 @@ public class PropertyService : IPropertyService
         }
     }
 
-    public async Task<Result<PropertyDetailResponse>> GetDetailAsync(
+    public async Task<Result<PropertyDetailResponseDto>> GetDetailAsync(
         Guid propertyId,
         Guid companyId,
         CancellationToken cancellationToken = default)
@@ -128,14 +128,14 @@ public class PropertyService : IPropertyService
             if (propertyWithoutFilter == null)
             {
                 _logger.LogWarning("Property {PropertyId} not found", propertyId);
-                return Result<PropertyDetailResponse>.Failure(PropertyErrors.NotFound(propertyId));
+                return Result<PropertyDetailResponseDto>.Failure(PropertyErrors.NotFound(propertyId));
             }
 
             if (propertyWithoutFilter.CompanyId != companyId)
             {
                 _logger.LogWarning("Property {PropertyId} does not belong to company {CompanyId}. Actual company: {ActualCompanyId}", 
                     propertyId, companyId, propertyWithoutFilter.CompanyId);
-                return Result<PropertyDetailResponse>.Failure(PropertyErrors.ForbiddenResource(propertyId, companyId));
+                return Result<PropertyDetailResponseDto>.Failure(PropertyErrors.ForbiddenResource(propertyId, companyId));
             }
 
             var property = propertyWithoutFilter;
@@ -148,7 +148,7 @@ public class PropertyService : IPropertyService
                 .CountInventoriesByPropertyAsync(propertyId, cancellationToken)
                 .ConfigureAwait(false);
 
-            var response = _mapper.Map<PropertyDetailResponse>(property);
+            var response = _mapper.Map<PropertyDetailResponseDto>(property);
             
             response.Stats = new PropertyStatsDto
             {
@@ -157,7 +157,7 @@ public class PropertyService : IPropertyService
             };
 
             _logger.LogDebug("Property detail retrieved successfully for {PropertyId}", propertyId);
-            return Result<PropertyDetailResponse>.Success(response);
+            return Result<PropertyDetailResponseDto>.Success(response);
         }
         catch (Exception ex)
         {

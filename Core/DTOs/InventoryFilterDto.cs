@@ -10,13 +10,13 @@ public class InventoryFilterDto
     public string SortOrder { get; set; } = "desc";
 }
 
-public class InventoryListResponse
+public class InventoryListResponseDto
 {
-    public List<InventoryResponse> Inventories { get; set; } = new();
-    public PageInfo Pagination { get; set; } = new();
+    public List<InventoryResponseDto> Inventories { get; set; } = new();
+    public PageInfoDto Pagination { get; set; } = new();
 }
 
-public class InventoryResponse
+public class InventoryResponseDto
 {
     public Guid InventoryId { get; set; }
     public InventoryPropertyInfoDto Property { get; set; } = new();

@@ -1,20 +1,24 @@
 namespace Elyssa.Core.DTOs;
 
-public class ApiResponse<T>
+public class ApiResponseDto
 {
     public bool Success { get; set; } = true;
-    public T? Data { get; set; }
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 }
 
-public class ApiErrorResponse
+public class ApiResponseDto<T> : ApiResponseDto
+{
+    public T Data { get; set; } = default!;
+}
+
+public class ApiErrorResponseDto
 {
     public bool Success { get; set; } = false;
-    public ErrorDetail Error { get; set; } = null!;
+    public ErrorDetailDto Error { get; set; } = null!;
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 }
 
-public class ErrorDetail
+public class ErrorDetailDto
 {
     public string Code { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;

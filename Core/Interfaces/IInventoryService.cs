@@ -5,12 +5,12 @@ namespace Elyssa.Core.Interfaces;
 
 public interface IInventoryService
 {
-    Task<Result<InventoryDetailResponse>> GetDetailAsync(
+    Task<Result<InventoryDetailResponseDto>> GetDetailAsync(
         Guid inventoryId,
         Guid companyId,
         CancellationToken cancellationToken = default);
 
-    Task<Result<InventoryListResponse>> GetPagedInventoriesAsync(
+    Task<Result<InventoryListResponseDto>> GetPagedInventoriesAsync(
         Guid companyId,
         InventoryFilterDto filter,
         CancellationToken cancellationToken = default);

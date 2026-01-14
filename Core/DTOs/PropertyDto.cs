@@ -1,6 +1,6 @@
 namespace Elyssa.Core.DTOs;
 
-public class PropertyResponse
+public class PropertyResponseDto
 {
     public Guid PropertyId { get; set; }
     public string? Code { get; set; }
@@ -11,13 +11,14 @@ public class PropertyResponse
     public decimal BuiltArea { get; set; }
     public decimal LotArea { get; set; }
     public int Levels { get; set; }
-    public PropertyTypeResponse PropertyType { get; set; } = new();
+    public PropertyTypeResponseDto PropertyType { get; set; } = new();
     public bool HasInventories { get; set; }
+    public string? EstateAgentName { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? ModifiedAt { get; set; }
 }
 
-public class PropertyTypeResponse
+public class PropertyTypeResponseDto
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;

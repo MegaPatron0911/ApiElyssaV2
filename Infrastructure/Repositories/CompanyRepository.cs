@@ -15,6 +15,7 @@ public class CompanyRepository : Repository<Company>, ICompanyRepository
     {
         return await _context.Companies
             .AsNoTracking()
+            .Include(c => c.Country)
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken)
             .ConfigureAwait(false);
     }

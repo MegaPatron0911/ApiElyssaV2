@@ -33,10 +33,10 @@ public class ExceptionHandlingMiddleware
         var statusCode = HttpStatusCode.InternalServerError;
         var isDevelopment = context.RequestServices.GetService<IWebHostEnvironment>()?.IsDevelopment() ?? false;
         
-        var errorResponse = new ApiErrorResponse
+        var errorResponse = new ApiErrorResponseDto
         {
             Success = false,
-            Error = new ErrorDetail
+            Error = new ErrorDetailDto
             {
                 Code = "INTERNAL_SERVER_ERROR",
                 Message = "Ocurrió un error interno en el servidor",

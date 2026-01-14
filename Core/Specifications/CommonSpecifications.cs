@@ -1,9 +1,10 @@
 using Ardalis.Specification;
 using Elyssa.Core.Domain.Entities;
+using EnvironmentEntity = Elyssa.Core.Domain.Entities.Environment;
 
 namespace Elyssa.Core.Specifications;
 
-public class PropertyEnvironmentsByPropertySpec : Specification<PropertyEnvironment>
+public class PropertyEnvironmentsByPropertySpec : Specification<EnvironmentEntity>
 {
     public PropertyEnvironmentsByPropertySpec(Guid propertyId)
     {
@@ -31,6 +32,6 @@ public class EstateAgentsByCompanySpec : Specification<EstateAgentInCompany>
 {
     public EstateAgentsByCompanySpec(Guid companyId)
     {
-        Query.Where(e => e.CompanyId == companyId && e.IsActive);
+        Query.Where(ea => ea.CompanyId == companyId && ea.IsActive);
     }
 }

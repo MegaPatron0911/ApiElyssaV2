@@ -23,9 +23,9 @@ public class CompaniesController : ControllerBase
     /// Obtiene información básica de la empresa autenticada
     /// </summary>
     [HttpGet("info")]
-    [ProducesResponseType(typeof(ApiResponse<CompanyBasicInfoDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponseDto<CompanyBasicInfoDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponseDto), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetCompanyBasicInfo(
         [FromHeader(Name = "x-company-id")] Guid companyId,
         CancellationToken cancellationToken)
@@ -33,7 +33,7 @@ public class CompaniesController : ControllerBase
         var result = await _companyService.GetBasicInfoAsync(companyId, cancellationToken);
 
         return result.Match(
-            success => Ok(new ApiResponse<CompanyBasicInfoDto>
+            success => Ok(new ApiResponseDto<CompanyBasicInfoDto>
             {
                 Success = true,
                 Data = success,

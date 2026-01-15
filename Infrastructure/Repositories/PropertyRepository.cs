@@ -41,7 +41,7 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
             query = query.Where(p => EF.Functions.ILike(p.City, $"%{city}%"));
         }
 
-        var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+        var totalCount = await query.CountAsync(cancellationToken);
 
         query = sortBy.ToLowerInvariant() switch
         {
@@ -64,8 +64,7 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
             .Include(p => p.EstateAgent)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .ToListAsync(cancellationToken);
 
         return (properties, totalCount);
     }
@@ -74,8 +73,7 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
     {
         var count = await _context.Set<Inventory>()
             .Where(i => i.PropertyId == propertyId && i.IsActive)
-            .CountAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .CountAsync(cancellationToken);
         
         return count > 0;
     }
@@ -94,8 +92,7 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
             .Where(i => propertyIdsList.Contains(i.PropertyId) && i.IsActive)
             .Select(i => i.PropertyId)
             .Distinct()
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .ToListAsync(cancellationToken);
 
         return propertyIdsList.ToDictionary(
             id => id,
@@ -111,24 +108,22 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
         return await _dbSet
             .AsNoTracking()
             .Include(p => p.PropertyType)
-            .Where(p => p.Id == propertyId 
-                     && p.CompanyId == companyId 
+            .Where(p => p.Id == propertyId
+                     && p.CompanyId == companyId
                      && p.IsActive)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<Property?> GetByIdWithoutCompanyFilterAsync(
         Guid propertyId, 
         CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+            return await _dbSet
             .AsNoTracking()
             .Include(p => p.PropertyType)
             .Include(p => p.EstateAgent)
             .Where(p => p.Id == propertyId && p.IsActive)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<int> CountEnvironmentsByPropertyAsync(
@@ -137,8 +132,7 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
     {
         return await _context.Set<EnvironmentEntity>()
             .Where(e => e.PropertyId == propertyId && e.IsActive)
-            .CountAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .CountAsync(cancellationToken);
     }
 
     public async Task<int> CountInventoriesByPropertyAsync(
@@ -147,7 +141,6 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
     {
         return await _context.Set<Inventory>()
             .Where(i => i.PropertyId == propertyId && i.IsActive)
-            .CountAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .CountAsync(cancellationToken);
     }
 }

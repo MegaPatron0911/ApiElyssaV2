@@ -13,8 +13,7 @@ public class PropertyResponseDto
     public int Levels { get; set; }
     public PropertyTypeResponseDto PropertyType { get; set; } = new();
     public bool HasInventories { get; set; }
-    public string? EstateAgentName { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
     public DateTime? ModifiedAt { get; set; }
 }
 

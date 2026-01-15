@@ -3,8 +3,7 @@ namespace Elyssa.Core.Domain.Entities;
 public class StakeHolderSignature : BaseEntity
 {
     public Guid? CompanyUserId { get; set; }
-    public string? SignatureUrl { get; set; }
     public DateTime? SignatureDate { get; set; }
     
-    public virtual ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
+    public virtual ICollection<Inventory> Inventories { get; set; }
 }

@@ -23,5 +23,5 @@ public class Inventory : BaseEntity
     public virtual EstateAgentInCompany? EstateAgent { get; set; }
     public virtual StakeHolderSignature? StakeHolderSignature { get; set; }
     public virtual OwnerSignature? OwnerSignature { get; set; }
-    public virtual ICollection<EnvironmentDiagnostic> EnvironmentDiagnostics { get; set; } = new List<EnvironmentDiagnostic>();
+    public virtual ICollection<EnvironmentDiagnostic> EnvironmentDiagnostics { get; set; }
 }

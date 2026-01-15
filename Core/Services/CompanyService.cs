@@ -24,8 +24,7 @@ public class CompanyService : ICompanyService
     public async Task<Result<CompanyDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var company = await _unitOfWork.Companies
-            .GetByIdAsync(id, cancellationToken)
-            .ConfigureAwait(false);
+            .GetByIdAsync(id, cancellationToken);
         
         if (company == null)
             return Result<CompanyDto>.Failure(CompanyErrors.NotFound(id));
@@ -36,8 +35,7 @@ public class CompanyService : ICompanyService
     public async Task<Result<IEnumerable<CompanyDto>>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var companies = await _unitOfWork.Companies
-            .GetAllAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .GetAllAsync(cancellationToken);
         
         var companiesDto = _mapper.Map<IEnumerable<CompanyDto>>(companies);
         
@@ -54,10 +52,9 @@ public class CompanyService : ICompanyService
         company.Id = Guid.NewGuid();
 
         var createdCompany = await _unitOfWork.Companies
-            .AddAsync(company, cancellationToken)
-            .ConfigureAwait(false);
-        
-        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            .AddAsync(company, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<CompanyDto>.Success(_mapper.Map<CompanyDto>(createdCompany));
     }
@@ -65,8 +62,7 @@ public class CompanyService : ICompanyService
     public async Task<Result> UpdateAsync(Guid id, CompanyDto companyDto, CancellationToken cancellationToken = default)
     {
         var company = await _unitOfWork.Companies
-            .GetByIdAsync(id, cancellationToken)
-            .ConfigureAwait(false);
+            .GetByIdAsync(id, cancellationToken);
         
         if (company == null)
             return Result.Failure(CompanyErrors.NotFound(id));
@@ -78,10 +74,9 @@ public class CompanyService : ICompanyService
         _mapper.Map(companyDto, company);
 
         await _unitOfWork.Companies
-            .UpdateAsync(company, cancellationToken)
-            .ConfigureAwait(false);
+            .UpdateAsync(company, cancellationToken);
         
-        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }
@@ -89,17 +84,15 @@ public class CompanyService : ICompanyService
     public async Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var exists = await _unitOfWork.Companies
-            .ExistsAsync(id, cancellationToken)
-            .ConfigureAwait(false);
+            .ExistsAsync(id, cancellationToken);
         
         if (!exists)
             return Result.Failure(CompanyErrors.NotFound(id));
 
         await _unitOfWork.Companies
-            .DeleteAsync(id, cancellationToken)
-            .ConfigureAwait(false);
-        
-        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            .DeleteAsync(id, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }
@@ -107,8 +100,7 @@ public class CompanyService : ICompanyService
     public async Task<Result<CompanyBasicInfoDto>> GetBasicInfoAsync(Guid companyId, CancellationToken cancellationToken = default)
     {
         var company = await _unitOfWork.Companies
-            .GetByIdWithPlanAsync(companyId, cancellationToken)
-            .ConfigureAwait(false);
+            .GetByIdWithPlanAsync(companyId, cancellationToken);
         
         if (company == null)
             return Result<CompanyBasicInfoDto>.Failure(CompanyErrors.NotFound(companyId));
@@ -118,15 +110,12 @@ public class CompanyService : ICompanyService
                 Error.Validation("Company.Inactive", "La empresa no está activa"));
 
         var activeUsers = await _unitOfWork.Companies
-            .CountActiveUsersByCompanyAsync(companyId, cancellationToken)
-            .ConfigureAwait(false);
-        
-        var activeProperties = await _unitOfWork.Companies
-            .CountActivePropertiesByCompanyAsync(companyId, cancellationToken)
-            .ConfigureAwait(false);
+            .CountActiveUsersByCompanyAsync(companyId, cancellationToken);
 
-        var planInfo = await GetPlanInfoCachedAsync(company.PlanType, cancellationToken)
-            .ConfigureAwait(false);
+        var activeProperties = await _unitOfWork.Companies
+            .CountActivePropertiesByCompanyAsync(companyId, cancellationToken);
+
+        var planInfo = await GetPlanInfoCachedAsync(company.PlanType, cancellationToken);
 
         var basicInfo = new CompanyBasicInfoDto
         {
@@ -134,7 +123,7 @@ public class CompanyService : ICompanyService
             BusinessName = company.BusinessName,
             Nit = company.Tin,
             Email = company.Email,
-            CreatedAt = company.CreatedAt,
+            CreatedAt = company.CreatedAt ?? DateTime.UtcNow,
             ActiveUsers = activeUsers,
             ActiveProperties = activeProperties,
             Plan = planInfo

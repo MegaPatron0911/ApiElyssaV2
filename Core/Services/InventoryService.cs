@@ -57,8 +57,7 @@ public class InventoryService : IInventoryService
                     filter.IsSigned,
                     filter.SortBy,
                     filter.SortOrder.ToLowerInvariant(),
-                    cancellationToken)
-                .ConfigureAwait(false);
+                    cancellationToken);
 
             var inventoryList = inventories.Select(inventory =>
             {
@@ -94,7 +93,7 @@ public class InventoryService : IInventoryService
                     RentalPrice = inventory.RentalPrice,
                     Currency = inventory.Currency,
                     PdfDownloadUrl = pdfDownloadUrl,
-                    CreatedAt = inventory.CreatedAt,
+                    CreatedAt = inventory.CreatedAt ?? DateTime.UtcNow,
                     SignatureDate = inventory.SignatureDate
                 };
             }).ToList();
@@ -143,8 +142,7 @@ public class InventoryService : IInventoryService
         try
         {
             var inventory = await _unitOfWork.Inventories
-                .GetDetailByIdAsync(inventoryId, cancellationToken)
-                .ConfigureAwait(false);
+                .GetDetailByIdAsync(inventoryId, cancellationToken);
 
             if (inventory == null)
             {
@@ -160,12 +158,10 @@ public class InventoryService : IInventoryService
             }
 
             var totalEnvironments = await _unitOfWork.Inventories
-                .CountEnvironmentsByInventoryAsync(inventoryId, cancellationToken)
-                .ConfigureAwait(false);
-            
+                .CountEnvironmentsByInventoryAsync(inventoryId, cancellationToken);
+
             var totalItems = await _unitOfWork.Inventories
-                .CountItemsByInventoryAsync(inventoryId, cancellationToken)
-                .ConfigureAwait(false);
+                .CountItemsByInventoryAsync(inventoryId, cancellationToken);
 
             var inventoryTypeName = inventory.InventoryType switch
             {
@@ -206,7 +202,7 @@ public class InventoryService : IInventoryService
                     TotalEnvironments = totalEnvironments,
                     TotalItems = totalItems
                 },
-                CreatedAt = inventory.CreatedAt
+                CreatedAt = inventory.CreatedAt ?? DateTime.UtcNow
             };
 
             _logger.LogDebug("Inventory detail retrieved successfully for {InventoryId}", inventoryId);

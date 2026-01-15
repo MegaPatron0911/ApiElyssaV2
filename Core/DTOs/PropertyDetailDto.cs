@@ -16,8 +16,7 @@ public class PropertyDetailResponseDto
     public PropertyLocationDto Location { get; set; } = new();
     public PropertyTypeDetailDto PropertyType { get; set; } = new();
     public PropertyStatsDto Stats { get; set; } = new();
-    public string? EstateAgentName { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
     public DateTime? ModifiedAt { get; set; }
 }
 

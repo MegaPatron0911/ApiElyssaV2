@@ -126,9 +126,8 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Levels).HasColumnName("Levels").HasDefaultValue(0);
             entity.Property(e => e.Country).HasColumnName("Country").HasColumnType("text");
             entity.Property(e => e.IsActive).HasColumnName("IsActive").HasDefaultValue(true);
-            
-            entity.Ignore(e => e.CreatedAt);
-            entity.Ignore(e => e.UpdatedAt);
+            entity.Property(e => e.CreatedAt).HasColumnName("CreationDate");
+            entity.Property(e => e.UpdatedAt).HasColumnName("ModificationDate");
 
             entity.HasOne(e => e.PropertyType)
                 .WithMany(pt => pt.Properties)
@@ -158,8 +157,8 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("PropertyTypeId");
             entity.Property(e => e.Name).HasColumnName("typeName").IsRequired();
-            entity.Property(e => e.CreatedAt).HasColumnName("CreationDate");
-            
+
+            entity.Ignore(e => e.CreatedAt);
             entity.Ignore(e => e.UpdatedAt);
         });
     }
@@ -441,7 +440,6 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("Id");
             entity.Property(e => e.CompanyUserId).HasColumnName("CompanyUserId");
-            entity.Property(e => e.SignatureUrl);
             entity.Property(e => e.SignatureDate);
             
             entity.Ignore(e => e.CreatedAt);
@@ -453,7 +451,6 @@ public class ApplicationDbContext : DbContext
             entity.ToTable("OwnerSignature");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("Id");
-            entity.Property(e => e.SignatureUrl);
             entity.Property(e => e.SignatureDate);
             
             entity.Ignore(e => e.CreatedAt);

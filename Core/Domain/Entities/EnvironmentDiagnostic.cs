@@ -9,5 +9,5 @@ public class EnvironmentDiagnostic : BaseEntity
 
     public virtual Environment? Environment { get; set; }
     public virtual Inventory? Inventory { get; set; }
-    public virtual ICollection<ItemDiagnostic> ItemDiagnostics { get; set; } = new List<ItemDiagnostic>();
+    public virtual ICollection<ItemDiagnostic> ItemDiagnostics { get; set; }
 }

@@ -13,11 +13,11 @@ public class Company : BaseEntity
     public string? CityId { get; set; }
     public string? Phone { get; set; }
     public int PlanType { get; set; }
-    public int? Status { get; set; } = CompanyStatus.ACTIVE;
-    public string LegalTextDelivery { get; set; } = string.Empty;
-    public string LegalTextRecruiment { get; set; } = string.Empty;
-    public string LegalTextReturn { get; set; } = string.Empty;
-    public string LegalTextNews { get; set; } = string.Empty;
+    public int? Status { get; set; }
+    public string LegalTextDelivery { get; set; }
+    public string LegalTextRecruiment { get; set; }
+    public string LegalTextReturn { get; set; }
+    public string LegalTextNews { get; set; }
     public int? Coins { get; set; }
     public int? MaxRentedProperties { get; set; }
     public Guid CountryId { get; set; }

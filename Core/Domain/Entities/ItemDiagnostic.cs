@@ -19,5 +19,5 @@ public class ItemDiagnostic : BaseEntity
     public virtual Item? Item { get; set; }
     public virtual EnvironmentDiagnostic? EnvironmentDiagnostic { get; set; }
     public virtual ItemDiagnostic? ParentItemDiagnostic { get; set; }
-    public virtual ICollection<ItemDiagnostic> ChildItemDiagnostics { get; set; } = new List<ItemDiagnostic>();
+    public virtual ICollection<ItemDiagnostic> ChildItemDiagnostics { get; set; }
 }

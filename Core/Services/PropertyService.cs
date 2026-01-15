@@ -59,8 +59,7 @@ public class PropertyService : IPropertyService
                     filter.City,
                     filter.SortBy,
                     filter.SortOrder.ToLowerInvariant(),
-                    cancellationToken)
-                .ConfigureAwait(false);
+                    cancellationToken);
 
             var propertyList = _mapper.Map<List<PropertyResponseDto>>(properties);
 
@@ -68,8 +67,7 @@ public class PropertyService : IPropertyService
             {
                 var propertyIds = propertyList.Select(p => p.PropertyId).ToList();
                 var inventoryMap = await _unitOfWork.Properties
-                    .GetInventoriesExistenceAsync(propertyIds, cancellationToken)
-                    .ConfigureAwait(false);
+                    .GetInventoriesExistenceAsync(propertyIds, cancellationToken);
 
                 foreach (var property in propertyList)
                 {
@@ -122,8 +120,7 @@ public class PropertyService : IPropertyService
         try
         {
             var propertyWithoutFilter = await _unitOfWork.Properties
-                .GetByIdWithoutCompanyFilterAsync(propertyId, cancellationToken)
-                .ConfigureAwait(false);
+                .GetByIdWithoutCompanyFilterAsync(propertyId, cancellationToken);
 
             if (propertyWithoutFilter == null)
             {
@@ -141,12 +138,10 @@ public class PropertyService : IPropertyService
             var property = propertyWithoutFilter;
 
             var totalEnvironments = await _unitOfWork.Properties
-                .CountEnvironmentsByPropertyAsync(propertyId, cancellationToken)
-                .ConfigureAwait(false);
-            
+                .CountEnvironmentsByPropertyAsync(propertyId, cancellationToken);
+
             var totalInventories = await _unitOfWork.Properties
-                .CountInventoriesByPropertyAsync(propertyId, cancellationToken)
-                .ConfigureAwait(false);
+                .CountInventoriesByPropertyAsync(propertyId, cancellationToken);
 
             var response = _mapper.Map<PropertyDetailResponseDto>(property);
             

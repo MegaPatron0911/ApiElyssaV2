@@ -18,15 +18,12 @@ public class InventoryRepository : Repository<Inventory>, IInventoryRepository
 
     public async Task<Inventory?> GetDetailByIdAsync(Guid inventoryId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+         return await _dbSet
             .AsNoTracking()
             .Include(i => i.Property)
                 .ThenInclude(p => p.PropertyType)
             .Include(i => i.EstateAgent)
-            .Include(i => i.StakeHolderSignature)
-            .Include(i => i.OwnerSignature)
-            .FirstOrDefaultAsync(i => i.Id == inventoryId && i.IsActive, cancellationToken)
-            .ConfigureAwait(false);
+            .FirstOrDefaultAsync(i => i.Id == inventoryId && i.IsActive, cancellationToken);
     }
 
     public async Task<int> CountEnvironmentsByInventoryAsync(Guid inventoryId, CancellationToken cancellationToken = default)
@@ -34,8 +31,7 @@ public class InventoryRepository : Repository<Inventory>, IInventoryRepository
         return await _context.Set<EnvironmentDiagnostic>()
             .AsNoTracking()
             .Where(ed => ed.InventoryId == inventoryId)
-            .CountAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .CountAsync(cancellationToken);
     }
 
     public async Task<int> CountItemsByInventoryAsync(Guid inventoryId, CancellationToken cancellationToken = default)
@@ -45,8 +41,7 @@ public class InventoryRepository : Repository<Inventory>, IInventoryRepository
             .Where(id => id.EnvironmentDiagnostic!.InventoryId == inventoryId)
             .Select(id => id.Id)
             .Distinct()
-            .CountAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .CountAsync(cancellationToken);
     }
 
     public async Task<(IEnumerable<Inventory> Inventories, int TotalCount)> GetPagedAsync(
@@ -75,7 +70,7 @@ public class InventoryRepository : Repository<Inventory>, IInventoryRepository
             query = query.Where(i => i.IsSigned == isSigned.Value);
         }
 
-        var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+        var totalCount = await query.CountAsync(cancellationToken);
 
         query = sortBy.ToLowerInvariant() switch
         {
@@ -93,8 +88,7 @@ public class InventoryRepository : Repository<Inventory>, IInventoryRepository
         var inventories = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .ToListAsync(cancellationToken);
 
         return (inventories, totalCount);
     }

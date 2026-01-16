@@ -1,7 +1,19 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Elyssa.Core.Domain.Entities;
 
-public class Property : BaseEntity
+public class Property
 {
+    public Property()
+    {
+        Inventories = new HashSet<Inventory>();
+        Environments = new HashSet<Environment>();
+    }
+
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid PropertyId { get; set; }
+    public DateTime CreationDate { get; set; }
+    public DateTime? ModificationDate { get; set; }
     public string Address { get; set; }
     public Guid CompanyId { get; set; }
     public Guid PropertyTypeId { get; set; }

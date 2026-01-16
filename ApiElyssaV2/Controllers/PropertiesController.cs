@@ -83,7 +83,7 @@ public class PropertiesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetPropertyDetail(
         [FromHeader(Name = "x-company-id")] Guid companyId,
-        [FromQuery] PropertyDetailRequest request,
+        [FromQuery] PropertyDetailRequestDto request,
         CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Processing property detail request for property {PropertyId} and company {CompanyId}", 

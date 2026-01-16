@@ -23,7 +23,7 @@ public class InventoryRepository : Repository<Inventory>, IInventoryRepository
             .Include(i => i.Property)
                 .ThenInclude(p => p.PropertyType)
             .Include(i => i.EstateAgent)
-            .FirstOrDefaultAsync(i => i.Id == inventoryId && i.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(i => i.InventoryId == inventoryId && i.IsActive, cancellationToken);
     }
 
     public async Task<int> CountEnvironmentsByInventoryAsync(Guid inventoryId, CancellationToken cancellationToken = default)
@@ -39,7 +39,7 @@ public class InventoryRepository : Repository<Inventory>, IInventoryRepository
         return await _context.Set<ItemDiagnostic>()
             .AsNoTracking()
             .Where(id => id.EnvironmentDiagnostic!.InventoryId == inventoryId)
-            .Select(id => id.Id)
+            .Select(id => id.ItemId)
             .Distinct()
             .CountAsync(cancellationToken);
     }
@@ -81,8 +81,8 @@ public class InventoryRepository : Repository<Inventory>, IInventoryRepository
                 ? query.OrderBy(i => i.RentalPrice)
                 : query.OrderByDescending(i => i.RentalPrice),
             _ => sortOrder == "asc"
-                ? query.OrderBy(i => i.CreatedAt)
-                : query.OrderByDescending(i => i.CreatedAt)
+                ? query.OrderBy(i => i.CreationDate)
+                : query.OrderByDescending(i => i.CreationDate)
         };
 
         var inventories = await query

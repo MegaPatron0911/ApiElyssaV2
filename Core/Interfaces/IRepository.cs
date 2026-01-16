@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace Elyssa.Core.Interfaces;
 
-public interface IRepository<T> where T : BaseEntity
+public interface IRepository<T> 
 {
     Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default);

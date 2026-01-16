@@ -1,8 +1,15 @@
 namespace Elyssa.Core.Domain.Entities;
 
-public class EstateAgentInCompany : BaseEntityLong
+public class EstateAgentInCompany 
 {
+    public EstateAgentInCompany()
+    {
+        Properties = new HashSet<Property>();
+        Inventories = new HashSet<Inventory>();
+    }
+
     public DateTime RegistrationDate { get; set; }
+    public long EstateAgentInCompanyId { get; set; }
     public Guid? CompanyId { get; set; }
     public bool IsActive { get; set; }
     public bool IsAdmin { get; set; }
@@ -19,7 +26,6 @@ public class EstateAgentInCompany : BaseEntityLong
     public Guid? RoleAliasId { get; set; }
 
     public virtual Company? Company { get; set; }
-    public virtual RoleAlias? RoleAlias { get; set; }
     public virtual ICollection<Property> Properties { get; set; }
     public virtual ICollection<Inventory> Inventories { get; set; }
 }

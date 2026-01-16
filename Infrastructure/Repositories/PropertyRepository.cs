@@ -55,8 +55,8 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
                 ? query.OrderBy(p => p.City)
                 : query.OrderByDescending(p => p.City),
             _ => sortOrder == "asc"
-                ? query.OrderBy(p => p.CreatedAt)
-                : query.OrderByDescending(p => p.CreatedAt)
+                ? query.OrderBy(p => p.CreationDate)
+                : query.OrderByDescending(p => p.CreationDate)
         };
 
         var properties = await query
@@ -74,7 +74,7 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
         var count = await _context.Set<Inventory>()
             .Where(i => i.PropertyId == propertyId && i.IsActive)
             .CountAsync(cancellationToken);
-        
+
         return count > 0;
     }
 
@@ -101,33 +101,33 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
     }
 
     public async Task<Property?> GetDetailByIdAsync(
-        Guid propertyId, 
-        Guid companyId, 
+        Guid propertyId,
+        Guid companyId,
         CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .AsNoTracking()
             .Include(p => p.PropertyType)
-            .Where(p => p.Id == propertyId
+            .Where(p => p.PropertyId == propertyId
                      && p.CompanyId == companyId
                      && p.IsActive)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<Property?> GetByIdWithoutCompanyFilterAsync(
-        Guid propertyId, 
+        Guid propertyId,
         CancellationToken cancellationToken = default)
     {
-            return await _dbSet
+        return await _dbSet
             .AsNoTracking()
             .Include(p => p.PropertyType)
             .Include(p => p.EstateAgent)
-            .Where(p => p.Id == propertyId && p.IsActive)
+            .Where(p => p.PropertyId == propertyId && p.IsActive)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<int> CountEnvironmentsByPropertyAsync(
-        Guid propertyId, 
+        Guid propertyId,
         CancellationToken cancellationToken = default)
     {
         return await _context.Set<EnvironmentEntity>()
@@ -136,11 +136,26 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
     }
 
     public async Task<int> CountInventoriesByPropertyAsync(
-        Guid propertyId, 
+        Guid propertyId,
         CancellationToken cancellationToken = default)
     {
         return await _context.Set<Inventory>()
             .Where(i => i.PropertyId == propertyId && i.IsActive)
             .CountAsync(cancellationToken);
+    }
+
+    public override async Task<Property> AddAsync(Property entity, CancellationToken cancellationToken = default)
+    {
+        entity.CreationDate = DateTime.UtcNow;
+        entity.ModificationDate = null;
+        await _dbSet.AddAsync(entity, cancellationToken);
+        return entity;
+    }
+
+    public override Task UpdateAsync(Property entity, CancellationToken cancellationToken = default)
+    {
+        entity.ModificationDate = DateTime.UtcNow;
+        _dbSet.Update(entity);
+        return Task.CompletedTask;
     }
 }

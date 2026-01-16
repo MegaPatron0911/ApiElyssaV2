@@ -26,6 +26,7 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
+
     builder.Host.UseSerilog();
 
     builder.Services.AddApiVersioning(options =>

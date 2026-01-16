@@ -9,15 +9,15 @@ public class PropertyMappingProfile : Profile
     public PropertyMappingProfile()
     {
         CreateMap<Property, PropertyResponseDto>()
-            .ForMember(dest => dest.PropertyId, opt => opt.MapFrom(src => src.Id))
-            .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => src.UpdatedAt))
+            .ForMember(dest => dest.PropertyId, opt => opt.MapFrom(src => src.PropertyId))
+            .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => src.ModificationDate))
             .ForMember(dest => dest.HasInventories, opt => opt.Ignore());
 
         CreateMap<PropertyType, PropertyTypeResponseDto>();
 
         CreateMap<Property, PropertyDetailResponseDto>()
-            .ForMember(dest => dest.PropertyId, opt => opt.MapFrom(src => src.Id))
-            .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => src.UpdatedAt))
+            .ForMember(dest => dest.PropertyId, opt => opt.MapFrom(src => src.PropertyId))
+            .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => src.ModificationDate))
             .ForMember(dest => dest.Location, opt => opt.MapFrom(src => new PropertyLocationDto
             {
                 Latitude = src.Latitude,
@@ -25,7 +25,7 @@ public class PropertyMappingProfile : Profile
             }))
             .ForMember(dest => dest.PropertyType, opt => opt.MapFrom(src => new PropertyTypeDetailDto
             {
-                Id = src.PropertyType!.Id,
+                Id = src.PropertyType!.PropertyTypeId,
                 Name = src.PropertyType.Name
             }))
 

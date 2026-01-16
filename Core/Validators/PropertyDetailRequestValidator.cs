@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace Elyssa.Core.Validators;
 
-public class PropertyDetailRequestValidator : AbstractValidator<PropertyDetailRequest>
+public class PropertyDetailRequestValidator : AbstractValidator<PropertyDetailRequestDto>
 {
     public PropertyDetailRequestValidator()
     {

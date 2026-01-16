@@ -1,7 +1,12 @@
 namespace Elyssa.Core.Domain.Entities;
 
-public class PropertyType : BaseEntity
+public class PropertyType
 {
+    public PropertyType()
+    {
+        Properties = new HashSet<Property>();
+    }
+    public Guid PropertyTypeId { set; get; }
     public string Name { get; set; }
     
     

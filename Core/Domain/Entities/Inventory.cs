@@ -1,8 +1,14 @@
 namespace Elyssa.Core.Domain.Entities;
 
-public class Inventory : BaseEntity
+public class Inventory
 {
+    public Inventory()
+    {
+        EnvironmentDiagnostics = new HashSet<EnvironmentDiagnostic>();
+    }
+    public Guid InventoryId { get; set; }
     public Guid PropertyId { get; set; }
+    public DateTime CreationDate { get; set; }
     public Guid? StakeHolderSignatureId { get; set; }
     public decimal RentalPrice { get; set; }
     public int InventoryType { get; set; }

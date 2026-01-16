@@ -37,7 +37,7 @@ public class PropertiesByCompanySpec : Specification<Property>
             "code" => p => p.Code!,
             "address" => p => p.Address,
             "city" => p => p.City,
-            _ => p => p.CreatedAt.ToString()
+            _ => p => p.CreationDate.ToString()
         }, ascending);
     }
 }
@@ -47,7 +47,7 @@ public class PropertyByIdSpec : Specification<Property>, ISingleResultSpecificat
     public PropertyByIdSpec(Guid propertyId, Guid companyId)
     {
         Query
-            .Where(p => p.Id == propertyId && p.CompanyId == companyId && p.IsActive)
+            .Where(p => p.CompanyId == propertyId && p.CompanyId == companyId && p.IsActive)
             .Include(p => p.PropertyType);
     }
 }
@@ -57,7 +57,7 @@ public class PropertyByIdWithoutCompanyFilterSpec : Specification<Property>, ISi
     public PropertyByIdWithoutCompanyFilterSpec(Guid propertyId)
     {
         Query
-            .Where(p => p.Id == propertyId && p.IsActive)
+            .Where(p => p.CompanyId == propertyId && p.IsActive)
             .Include(p => p.PropertyType);
     }
 }

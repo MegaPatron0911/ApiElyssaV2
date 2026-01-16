@@ -17,7 +17,6 @@ public class ApplicationDbContext : DbContext
     public virtual DbSet<PropertyType> PropertyTypes { get; set; } = null!;
     public virtual DbSet<Inventory> Inventories { get; set; } = null!;
     public virtual DbSet<EstateAgentInCompany> EstateAgentInCompanies { get; set; } = null!;
-    public virtual DbSet<RoleAlias> RoleAliases { get; set; } = null!;
     public virtual DbSet<EnvironmentEntity> Environments { get; set; } = null!;
     public virtual DbSet<EnvironmentType> EnvironmentTypes { get; set; } = null!;
     public virtual DbSet<EnvironmentDiagnostic> EnvironmentDiagnostics { get; set; } = null!;
@@ -35,7 +34,6 @@ public class ApplicationDbContext : DbContext
         ConfigurePropertyType(modelBuilder);
         ConfigureInventory(modelBuilder);
         ConfigureEstateAgentInCompany(modelBuilder);
-        ConfigureRoleAlias(modelBuilder);
         ConfigureEnvironment(modelBuilder);
         ConfigureEnvironmentType(modelBuilder);
         ConfigureEnvironmentDiagnostic(modelBuilder);
@@ -50,8 +48,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Company>(entity =>
         {
             entity.ToTable("Company");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("CompanyId");
+            entity.HasKey(e => e.CompanyId);
+            entity.Property(e => e.CompanyId).HasColumnName("CompanyId");
 
             entity.Property(e => e.BusinessName).HasColumnName("BusinessName");
             entity.Property(e => e.Tin).HasColumnName("Tin");
@@ -69,8 +67,8 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.LegalTextNews).HasColumnName("LegalTextNews").HasColumnType("text");
             entity.Property(e => e.Coins).HasColumnName("Coins");
             entity.Property(e => e.MaxRentedProperties).HasColumnName("MaxRentedProperties");
-            entity.Property(e => e.CreatedAt).HasColumnName("CreationDate");
-            entity.Property(e => e.UpdatedAt).HasColumnName("UpdateDate");
+            entity.Property(e => e.CreationDate).HasColumnName("CreationDate");
+            entity.Property(e => e.UpdateDate).HasColumnName("UpdateDate");
             entity.Property(e => e.CountryId).HasColumnName("CountryId");
             entity.Property(e => e.HasCenterRepair).HasColumnName("HasCenterRepair");
 
@@ -87,18 +85,15 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Country>(entity =>
         {
             entity.ToTable("Country");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("CountryId");
+            entity.HasKey(e => e.CountryId);
+            entity.Property(e => e.CountryId).HasColumnName("CountryId");
 
             entity.Property(e => e.CountryName).HasColumnName("CountryName");
             entity.Property(e => e.Currency).HasColumnName("Currency");
             entity.Property(e => e.CurrencySymbol).HasColumnName("CurrencySymbol");
-            entity.Property(e => e.ISOCode).HasColumnName("ISOCode");
             entity.Property(e => e.PhoneFormat).HasColumnName("PhoneFormat");
             entity.Property(e => e.PrefixPhone).HasColumnName("PrefixPhone");
             
-            entity.Ignore(e => e.CreatedAt);
-            entity.Ignore(e => e.UpdatedAt);
         });
     }
 
@@ -107,8 +102,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Property>(entity =>
         {
             entity.ToTable("Property");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("PropertyId");
+            entity.HasKey(e => e.PropertyId);
+            entity.Property(e => e.PropertyId).HasColumnName("PropertyId");
 
             entity.Property(e => e.Address).HasColumnName("Address").IsRequired();
             entity.Property(e => e.CompanyId).HasColumnName("CompanyId").IsRequired();
@@ -126,8 +121,8 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Levels).HasColumnName("Levels").HasDefaultValue(0);
             entity.Property(e => e.Country).HasColumnName("Country").HasColumnType("text");
             entity.Property(e => e.IsActive).HasColumnName("IsActive").HasDefaultValue(true);
-            entity.Property(e => e.CreatedAt).HasColumnName("CreationDate");
-            entity.Property(e => e.UpdatedAt).HasColumnName("ModificationDate");
+            entity.Property(e => e.CreationDate).HasColumnName("CreationDate");
+            entity.Property(e => e.ModificationDate).HasColumnName("ModificationDate");
 
             entity.HasOne(e => e.PropertyType)
                 .WithMany(pt => pt.Properties)
@@ -154,12 +149,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<PropertyType>(entity =>
         {
             entity.ToTable("PropertyType");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("PropertyTypeId");
+            entity.HasKey(e => e.PropertyTypeId);
+            entity.Property(e => e.PropertyTypeId).HasColumnName("PropertyTypeId");
             entity.Property(e => e.Name).HasColumnName("typeName").IsRequired();
-
-            entity.Ignore(e => e.CreatedAt);
-            entity.Ignore(e => e.UpdatedAt);
         });
     }
 
@@ -168,8 +160,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Inventory>(entity =>
         {
             entity.ToTable("Inventory");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("InventoryId");
+            entity.HasKey(e => e.InventoryId);
+            entity.Property(e => e.InventoryId).HasColumnName("InventoryId");
 
             entity.Property(e => e.PropertyId).HasColumnName("PropertyId").IsRequired();
             entity.Property(e => e.StakeHolderSignatureId).HasColumnName("StakeHolderSignatureId");
@@ -187,10 +179,8 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.OwnerSignatureId).HasColumnName("OwnerSignatureId");
             entity.Property(e => e.IsActive).HasColumnName("IsActive").HasDefaultValue(true);
             entity.Property(e => e.Currency).HasColumnName("Currency").HasColumnType("text");
-            entity.Property(e => e.CreatedAt).HasColumnName("CreationDate").IsRequired();
+            entity.Property(e => e.CreationDate).HasColumnName("CreationDate").IsRequired();
             
-            entity.Ignore(e => e.UpdatedAt);
-
             entity.HasOne(e => e.Property)
                 .WithMany(p => p.Inventories)
                 .HasForeignKey(e => e.PropertyId)
@@ -222,8 +212,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<EstateAgentInCompany>(entity =>
         {
             entity.ToTable("EstateAgentInCompany");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("EstateAgentInCompanyId").ValueGeneratedOnAdd();
+            entity.HasKey(e => e.EstateAgentInCompanyId);
+            entity.Property(e => e.EstateAgentInCompanyId).HasColumnName("EstateAgentInCompanyId").ValueGeneratedOnAdd();
 
             entity.Property(e => e.RegistrationDate).HasColumnName("RegistrationDate").IsRequired();
             entity.Property(e => e.CompanyId).HasColumnName("CompanyId");
@@ -241,45 +231,20 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Phone).HasColumnName("Phone");
             entity.Property(e => e.RoleAliasId).HasColumnName("RoleAliasId");
             
-            entity.Ignore(e => e.CreatedAt);
-            entity.Ignore(e => e.UpdatedAt);
-
             entity.HasOne(e => e.Company)
                 .WithMany()
                 .HasForeignKey(e => e.CompanyId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_EstateAgentInCompany_Company");
-
-            entity.HasOne(e => e.RoleAlias)
-                .WithMany(r => r.EstateAgents)
-                .HasForeignKey(e => e.RoleAliasId)
-                .OnDelete(DeleteBehavior.Restrict)
-                .HasConstraintName("FK_EstateAgentInCompany_RoleAlias");
         });
     }
-
-    private void ConfigureRoleAlias(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<RoleAlias>(entity =>
-        {
-            entity.ToTable("RoleAlias");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("RoleAliasId");
-            entity.Property(e => e.RoleName).IsRequired();
-            entity.Property(e => e.Description);
-            
-            entity.Ignore(e => e.CreatedAt);
-            entity.Ignore(e => e.UpdatedAt);
-        });
-    }
-
     private void ConfigureEnvironment(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<EnvironmentEntity>(entity =>
         {
             entity.ToTable("Environment");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("EnvironmentId");
+            entity.HasKey(e => e.EnvironmentId);
+            entity.Property(e => e.EnvironmentId).HasColumnName("EnvironmentId");
 
             entity.Property(e => e.Level).HasColumnName("Level").IsRequired();
             entity.Property(e => e.EnvironmentName).HasColumnName("EnvironmentName").HasColumnType("text").IsRequired();
@@ -290,9 +255,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.NuwweDistributionId).HasColumnName("NuwweDistributionId").HasDefaultValue(0);
             entity.Property(e => e.NuwweInmuebleId).HasColumnName("NuwweInmuebleId").HasDefaultValue(0);
             entity.Property(e => e.NuwweOrden).HasColumnName("NuwweOrden").HasDefaultValue(0);
-            
-            entity.Ignore(e => e.CreatedAt);
-            entity.Ignore(e => e.UpdatedAt);
 
             entity.HasOne(e => e.EnvironmentType)
                 .WithMany(et => et.Environments)
@@ -313,12 +275,10 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<EnvironmentType>(entity =>
         {
             entity.ToTable("EnvironmentType");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("EnvironmentTypeId");
+            entity.HasKey(e => e.EnvironmentTypeId);
+            entity.Property(e => e.EnvironmentTypeId).HasColumnName("EnvironmentTypeId");
             entity.Property(e => e.EnvironmentTypeName).HasColumnType("text").IsRequired();
             
-            entity.Ignore(e => e.CreatedAt);
-            entity.Ignore(e => e.UpdatedAt);
         });
     }
 
@@ -327,16 +287,13 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<EnvironmentDiagnostic>(entity =>
         {
             entity.ToTable("EnvironmentDiagnostics");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("EnvironmentDiagnosticId");
+            entity.HasKey(e => e.EnvinronmentDiagnosticId);
+            entity.Property(e => e.EnvinronmentDiagnosticId).HasColumnName("EnvironmentDiagnosticId");
 
             entity.Property(e => e.EnvironmentId).HasColumnName("EnvironmentId").IsRequired();
             entity.Property(e => e.InventoryId).HasColumnName("InventoryId").IsRequired();
             entity.Property(e => e.Observations).HasColumnName("Observations");
             entity.Property(e => e.State).HasColumnName("State");
-            
-            entity.Ignore(e => e.CreatedAt);
-            entity.Ignore(e => e.UpdatedAt);
 
             entity.HasOne(e => e.Environment)
                 .WithMany(env => env.EnvironmentDiagnostics)
@@ -357,13 +314,10 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Item>(entity =>
         {
             entity.ToTable("Item");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("ItemId");
+            entity.HasKey(e => e.ItemId);
+            entity.Property(e => e.ItemId).HasColumnName("ItemId");
             entity.Property(e => e.ItemName).IsRequired();
             entity.Property(e => e.ImageUrl).HasColumnType("text");
-            
-            entity.Ignore(e => e.CreatedAt);
-            entity.Ignore(e => e.UpdatedAt);
         });
     }
 
@@ -372,13 +326,10 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Material>(entity =>
         {
             entity.ToTable("Material");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("MaterialId");
+            entity.HasKey(e => e.MaterialId);
+            entity.Property(e => e.MaterialId).HasColumnName("MaterialId");
             entity.Property(e => e.MaterialName).IsRequired();
             entity.Property(e => e.Description);
-            
-            entity.Ignore(e => e.CreatedAt);
-            entity.Ignore(e => e.UpdatedAt);
         });
     }
 
@@ -387,8 +338,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<ItemDiagnostic>(entity =>
         {
             entity.ToTable("ItemDiagnostic");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("ItemDiagnosticId");
+            entity.HasKey(e => e.ItemDiagnosticId);
+            entity.Property(e => e.ItemDiagnosticId).HasColumnName("ItemDiagnosticId");
 
             entity.Property(e => e.MaterialId).HasColumnName("MaterialId");
             entity.Property(e => e.ItemId).HasColumnName("ItemId").IsRequired();
@@ -403,9 +354,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Amount).HasColumnName("Amount").HasDefaultValue(0);
             entity.Property(e => e.Order).HasColumnName("Order");
             
-            entity.Ignore(e => e.CreatedAt);
-            entity.Ignore(e => e.UpdatedAt);
-
             entity.HasOne(e => e.Material)
                 .WithMany(m => m.ItemDiagnostics)
                 .HasForeignKey(e => e.MaterialId)
@@ -439,11 +387,8 @@ public class ApplicationDbContext : DbContext
             entity.ToTable("StakeHolderSignature");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("Id");
-            entity.Property(e => e.CompanyUserId).HasColumnName("CompanyUserId");
             entity.Property(e => e.SignatureDate);
             
-            entity.Ignore(e => e.CreatedAt);
-            entity.Ignore(e => e.UpdatedAt);
         });
 
         modelBuilder.Entity<OwnerSignature>(entity =>
@@ -451,10 +396,7 @@ public class ApplicationDbContext : DbContext
             entity.ToTable("OwnerSignature");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("Id");
-            entity.Property(e => e.SignatureDate);
-            
-            entity.Ignore(e => e.CreatedAt);
-            entity.Ignore(e => e.UpdatedAt);
+            entity.Property(e => e.SignatureDate);            
         });
     }
 }

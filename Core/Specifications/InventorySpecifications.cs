@@ -30,7 +30,7 @@ public class InventoriesByCompanySpec : Specification<Inventory>
         {
             "signaturedate" => i => i.SignatureDate.ToString()!,
             "rentalprice" => i => i.RentalPrice.ToString(),
-            _ => i => i.CreatedAt.ToString()
+            _ => i => i.CreationDate.ToString()
         }, ascending);
     }
 }
@@ -40,7 +40,7 @@ public class InventoryByIdSpec : Specification<Inventory>, ISingleResultSpecific
     public InventoryByIdSpec(Guid inventoryId)
     {
         Query
-            .Where(i => i.Id == inventoryId && i.IsActive)
+            .Where(i => i.PropertyId == inventoryId && i.IsActive)
             .Include(i => i.Property);
     }
 }

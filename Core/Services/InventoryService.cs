@@ -78,10 +78,10 @@ public class InventoryService : IInventoryService
 
                 return new InventoryResponseDto
                 {
-                    InventoryId = inventory.Id,
+                    InventoryId = inventory.InventoryId,
                     Property = new InventoryPropertyInfoDto
                     {
-                        PropertyId = inventory.Property!.Id,
+                        PropertyId = inventory.Property!.PropertyId,
                         Code = inventory.Property.Code,
                         Address = inventory.Property.Address,
                         City = inventory.Property.City
@@ -93,7 +93,7 @@ public class InventoryService : IInventoryService
                     RentalPrice = inventory.RentalPrice,
                     Currency = inventory.Currency,
                     PdfDownloadUrl = pdfDownloadUrl,
-                    CreatedAt = inventory.CreatedAt ?? DateTime.UtcNow,
+                    CreatedAt = inventory.CreationDate,
                     SignatureDate = inventory.SignatureDate
                 };
             }).ToList();
@@ -174,10 +174,10 @@ public class InventoryService : IInventoryService
 
             var response = new InventoryDetailResponseDto
             {
-                InventoryId = inventory.Id,
+                InventoryId = inventory.InventoryId,
                 Property = new InventoryPropertyDto
                 {
-                    PropertyId = inventory.Property.Id,
+                    PropertyId = inventory.Property.PropertyId,
                     Code = inventory.Property.Code,
                     Address = inventory.Property.Address,
                     City = inventory.Property.City,
@@ -202,7 +202,7 @@ public class InventoryService : IInventoryService
                     TotalEnvironments = totalEnvironments,
                     TotalItems = totalItems
                 },
-                CreatedAt = inventory.CreatedAt ?? DateTime.UtcNow
+                CreatedAt = inventory.CreationDate,
             };
 
             _logger.LogDebug("Inventory detail retrieved successfully for {InventoryId}", inventoryId);

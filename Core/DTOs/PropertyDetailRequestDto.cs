@@ -1,6 +1,6 @@
 namespace Elyssa.Core.DTOs;
 
-public class PropertyDetailRequest
+public class PropertyDetailRequestDto
 {
     public Guid PropertyId { get; set; }
 }

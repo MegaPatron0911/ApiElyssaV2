@@ -16,7 +16,7 @@ public class CompanyRepository : Repository<Company>, ICompanyRepository
         return await _context.Companies
             .AsNoTracking()
             .Include(c => c.Country)
-            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(c => c.CompanyId == id, cancellationToken);
     }
 
     public async Task<int> CountActiveUsersByCompanyAsync(Guid companyId, CancellationToken cancellationToken = default)

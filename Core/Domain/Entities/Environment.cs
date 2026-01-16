@@ -1,7 +1,12 @@
 namespace Elyssa.Core.Domain.Entities;
 
-public class Environment : BaseEntity
+public class Environment
 {
+    public Environment()
+    {
+        EnvironmentDiagnostics = new HashSet<EnvironmentDiagnostic>();
+    }
+    public Guid EnvironmentId { get; set; }
     public int Level { get; set; }
     public string EnvironmentName { get; set; }
     public Guid EnvironmentTypeId { get; set; }

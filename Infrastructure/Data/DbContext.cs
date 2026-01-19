@@ -61,10 +61,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Phone).HasColumnName("Phone");
             entity.Property(e => e.PlanType).HasColumnName("PlanType");
             entity.Property(e => e.Status).HasColumnName("Status");
-            entity.Property(e => e.LegalTextDelivery).HasColumnName("LegalTextDelivery").HasColumnType("text");
-            entity.Property(e => e.LegalTextRecruiment).HasColumnName("LegalTextRecruiment").HasColumnType("text");
-            entity.Property(e => e.LegalTextReturn).HasColumnName("LegalTextReturn").HasColumnType("text");
-            entity.Property(e => e.LegalTextNews).HasColumnName("LegalTextNews").HasColumnType("text");
             entity.Property(e => e.Coins).HasColumnName("Coins");
             entity.Property(e => e.MaxRentedProperties).HasColumnName("MaxRentedProperties");
             entity.Property(e => e.CreationDate).HasColumnName("CreationDate");

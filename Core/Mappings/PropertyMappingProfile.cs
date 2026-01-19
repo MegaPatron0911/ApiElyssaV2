@@ -18,6 +18,7 @@ public class PropertyMappingProfile : Profile
         CreateMap<Property, PropertyDetailResponseDto>()
             .ForMember(dest => dest.PropertyId, opt => opt.MapFrom(src => src.PropertyId))
             .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => src.ModificationDate))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreationDate))
             .ForMember(dest => dest.Location, opt => opt.MapFrom(src => new PropertyLocationDto
             {
                 Latitude = src.Latitude,

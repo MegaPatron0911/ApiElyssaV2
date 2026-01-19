@@ -10,10 +10,18 @@ public class PropertyMappingProfile : Profile
     {
         CreateMap<Property, PropertyResponseDto>()
             .ForMember(dest => dest.PropertyId, opt => opt.MapFrom(src => src.PropertyId))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreationDate))
             .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => src.ModificationDate))
+            .ForMember(dest => dest.PropertyType, opt => opt.MapFrom(src => new PropertyTypeResponseDto  
+            {
+                Id = src.PropertyTypeId,  
+                Name = src.PropertyType != null ? src.PropertyType.typeName : string.Empty
+            }))
             .ForMember(dest => dest.HasInventories, opt => opt.Ignore());
 
-        CreateMap<PropertyType, PropertyTypeResponseDto>();
+        CreateMap<PropertyType, PropertyTypeResponseDto>()
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.PropertyTypeId))  
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.typeName));
 
         CreateMap<Property, PropertyDetailResponseDto>()
             .ForMember(dest => dest.PropertyId, opt => opt.MapFrom(src => src.PropertyId))
@@ -26,10 +34,9 @@ public class PropertyMappingProfile : Profile
             }))
             .ForMember(dest => dest.PropertyType, opt => opt.MapFrom(src => new PropertyTypeDetailDto
             {
-                Id = src.PropertyType!.PropertyTypeId,
-                Name = src.PropertyType.Name
+                Id = src.PropertyTypeId,
+                Name = src.PropertyType != null ? src.PropertyType.typeName : string.Empty
             }))
-
             .ForMember(dest => dest.Stats, opt => opt.Ignore());
     }
 }

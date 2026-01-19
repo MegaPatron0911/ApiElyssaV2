@@ -7,7 +7,7 @@ public class PropertyType
         Properties = new HashSet<Property>();
     }
     public Guid PropertyTypeId { set; get; }
-    public string Name { get; set; }
+    public string typeName { get; set; }
     
     
     public virtual ICollection<Property> Properties { get; set; }

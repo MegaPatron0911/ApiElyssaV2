@@ -147,7 +147,7 @@ public class ApplicationDbContext : DbContext
             entity.ToTable("PropertyType");
             entity.HasKey(e => e.PropertyTypeId);
             entity.Property(e => e.PropertyTypeId).HasColumnName("PropertyTypeId");
-            entity.Property(e => e.Name).HasColumnName("typeName").IsRequired();
+            entity.Property(e => e.typeName).HasColumnName("typeName").IsRequired();
         });
     }
 
